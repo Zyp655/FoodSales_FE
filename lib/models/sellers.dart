@@ -1,4 +1,4 @@
-class Sellers {
+class Seller {
   int? id;
   String? name;
   String? image;
@@ -6,7 +6,7 @@ class Sellers {
   String? address;
   String? description;
 
-  Sellers.fromMap(Map<dynamic , dynamic> map){
+  Seller.fromMap(Map<dynamic , dynamic> map){
     id= int.parse(map['id']);
     name= map['name'];
     image= map['image'];

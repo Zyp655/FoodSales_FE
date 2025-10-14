@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       ),
       home: const SplashScreen(),
       routes: {
-        SellersScreen.routeName:(_)=> SellersScreen()
+        SellersScreen.routeName: (context) => const SellersScreen(),
       },
     );
   }

@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:cnpm_ptpm/Screens/sellers_screen.dart';
 import 'package:cnpm_ptpm/server_handle.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
@@ -19,20 +19,22 @@ class _SplashScreenState extends State<SplashScreen> {
   void getSellers() {
     ServerHandler()
         .getSellers()
-        .then((value) => Navigator.of(context).popAndPushNamed(SellersScreen.routeName))
-        .catchError((e)=> print(e));
+        .then(
+          (value) => Navigator.of(
+            context,
+          ).popAndPushNamed(SellersScreen.routeName, arguments: value),
+        )
+        .catchError((e) => print(e));
   }
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer(
-        const Duration(seconds: 3),
-            () {
-          showLoadingSellers = true;
-          setState(() {});
-          getSellers();
-        });
+    _timer = Timer(const Duration(seconds: 3), () {
+      showLoadingSellers = true;
+      setState(() {});
+      getSellers();
+    });
   }
 
   @override
@@ -77,6 +79,4 @@ class _SplashScreenState extends State<SplashScreen> {
       ),
     );
   }
-
-
 }
