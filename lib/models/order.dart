@@ -1,7 +1,7 @@
 // lib/models/order.dart
 import 'dart:convert';
 import 'package:cnpm_ptpm/models/order_item.dart';
-import 'package:cnpm_ptpm/models/sellers.dart';
+import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 
 class Order {
