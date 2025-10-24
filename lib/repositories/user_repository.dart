@@ -1,5 +1,5 @@
 import 'dart:convert';
-import '../models/sellers.dart';
+import '../models/seller.dart';
 import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/cart_item.dart';

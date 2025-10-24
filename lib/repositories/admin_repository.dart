@@ -5,7 +5,7 @@ import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/models/order.dart';
 
-import '../models/sellers.dart';
+import '../models/seller.dart';
 
 class AdminRepository {
   final String _baseUrl = 'http://10.0.2.2/FOODSALES_BE/api';

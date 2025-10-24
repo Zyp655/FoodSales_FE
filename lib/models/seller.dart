@@ -43,4 +43,4 @@ class Seller {
 
   factory Seller.fromJson(String source) =>
       Seller.fromMap(json.decode(source));
-}
+  }
