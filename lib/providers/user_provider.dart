@@ -1,16 +1,20 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/cart_item.dart';
 import 'package:cnpm_ptpm/models/order.dart';
+import 'package:cnpm_ptpm/models/category.dart';
 import 'package:cnpm_ptpm/repositories/user_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
-import '../models/seller.dart';
-
 final userRepositoryProvider = Provider<UserRepository>((ref) {
   return UserRepository();
+});
+
+final categoriesProvider = FutureProvider<List<Category>>((ref) {
+  return ref.watch(userRepositoryProvider).getCategories();
 });
 
 final sellersProvider = FutureProvider<List<Seller>>((ref) {

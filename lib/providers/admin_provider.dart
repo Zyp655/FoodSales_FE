@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/user.dart';
+import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/repositories/admin_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
-
-import '../models/seller.dart';
 
 final adminRepositoryProvider = Provider<AdminRepository>((ref) {
   return AdminRepository();
@@ -77,6 +76,19 @@ class AdminNotifier extends StateNotifier<AdminState> {
     if (token == null) return;
     await _getRepo().adminUpdateSellerStatus(token, sellerId, status);
     fetchAllData();
+  }
+
+  Future<void> adminUpdateUserRole(int userId, String role) async {
+    final token = _getToken();
+    if (token == null) return;
+
+    state = state.copyWith(isLoading: true);
+    try {
+      await _getRepo().adminUpdateUserRole(token, userId, role);
+      fetchAllData();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
 }
 

@@ -4,6 +4,7 @@ import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/repositories/seller_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:image_picker/image_picker.dart';
 
 final sellerRepositoryProvider = Provider<SellerRepository>((ref) {
   return SellerRepository();
@@ -58,11 +59,27 @@ class SellerNotifier extends StateNotifier<SellerState> {
     }
   }
 
-  Future<void> addProduct(Product product) async {
+  Future<void> addProduct(Product product, XFile? imageFile) async {
     final token = _getToken();
     if (token == null) return;
     state = state.copyWith(isLoading: true);
-    await _getRepo().addProduct(token, product);
+    try {
+      await _getRepo().addProduct(token, product, imageFile);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+    fetchMyProducts();
+  }
+
+  Future<void> updateProduct(Product product, XFile? imageFile) async {
+    final token = _getToken();
+    if (token == null || product.id == null) return;
+    state = state.copyWith(isLoading: true);
+    try {
+      await _getRepo().updateProduct(token, product.id!, product, imageFile);
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
     fetchMyProducts();
   }
 }
