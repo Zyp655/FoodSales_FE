@@ -1,8 +1,8 @@
-import 'package:cnpm_ptpm/features/auth/screens/splash_screen.dart';
+import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cnpm_ptpm/features/user/screens/sellers_screen.dart';
 import 'features/user/screens/product_screen.dart';
+import 'features/user/screens/user_home_screen.dart';
 
 void main() => runApp(
   const ProviderScope(
@@ -21,9 +21,9 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const SplashScreen(),
+      home: const LoginScreen(),
       routes: {
-        SellersScreen.routeName: (context) => const SellersScreen(),
+        UserHomeScreen.routeName: (context) => const UserHomeScreen(),
         ProductScreen.routeName: (context) => const ProductScreen(),
       },
     );

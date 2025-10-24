@@ -1,10 +1,12 @@
 import 'dart:convert';
-import '../models/seller.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:cnpm_ptpm/models/product.dart';
+import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/cart_item.dart';
 import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/transaction.dart';
+import 'package:cnpm_ptpm/models/category.dart';
 
 class UserRepository {
   final String _baseUrl = 'http://10.0.2.2/FOODSALES_BE/api';
@@ -26,6 +28,18 @@ class UserRepository {
     } else {
       print('API Error: ${response.statusCode} - ${response.body}');
       throw Exception('Lỗi API: ${response.statusCode}, ${response.body}');
+    }
+  }
+
+  Future<List<Category>> getCategories() async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/gen/categories'));
+      dynamic responseBody = _handleResponse(response);
+      List<dynamic> categoryList = responseBody['categories'];
+      return categoryList.map((data) => Category.fromMap(data)).toList();
+    } catch (e) {
+      print('getCategories error: ' + e.toString());
+      rethrow;
     }
   }
 

@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/user.dart';
 
 class AuthRepository {
-  final String _baseUrl = 'http://10.0.2.2/FOODSALES_BE/api';
+  final String _baseUrl = 'http://10.0.2.2:8000/api';
 
   Map<String, String> _getAuthHeaders(String token) {
     return {
@@ -23,7 +23,7 @@ class AuthRepository {
       return json.decode(response.body);
     } else {
       print('API Error: ${response.statusCode} - ${response.body}');
-      throw Exception('Lỗi API: ${response.statusCode}, ${response.body}');
+      throw Exception('Api error: ${response.statusCode}, ${response.body}');
     }
   }
 
