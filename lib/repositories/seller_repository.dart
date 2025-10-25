@@ -4,7 +4,7 @@ import 'package:cnpm_ptpm/models/product.dart';
 import 'package:image_picker/image_picker.dart';
 
 class SellerRepository {
-  final String _baseUrl = 'http://10.0.2.2/FOODSALES_BE/api';
+  final String _baseUrl = 'http://10.0.2.2:8000/api';
 
   Map<String, String> _getAuthHeaders(String token) {
     return {
@@ -19,7 +19,7 @@ class SellerRepository {
       return json.decode(response.body);
     } else {
       print('API Error: ${response.statusCode} - ${response.body}');
-      throw Exception('Lỗi API: ${response.statusCode}, ${response.body}');
+      throw Exception('Error api: ${response.statusCode}, ${response.body}');
     }
   }
 
@@ -30,11 +30,25 @@ class SellerRepository {
         headers: _getAuthHeaders(token),
       );
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> productList = responseBody;
-      return productList.map((data) => Product.fromMap(data)).toList();
+
+      print('DEBUG: Raw responseBody from /seller/product/: $responseBody');
+
+      if (responseBody is Map && responseBody.containsKey('data')) {
+        if (responseBody['data'] is List) {
+          List<dynamic> productList = responseBody['data'];
+          return productList.map((data) => Product.fromMap(data)).toList();
+        }
+      }
+      else if (responseBody is List) {
+        List<dynamic> productList = responseBody;
+        return productList.map((data) => Product.fromMap(data)).toList();
+      }
+
+      return [];
+
     } catch (e) {
       print('getProductsBySeller error: $e');
-      rethrow;
+      return [];
     }
   }
 

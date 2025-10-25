@@ -9,7 +9,7 @@ import 'package:cnpm_ptpm/models/transaction.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 
 class UserRepository {
-  final String _baseUrl = 'http://10.0.2.2/FOODSALES_BE/api';
+  final String _baseUrl = 'http://10.0.2.2:8000/api';
 
   Map<String, String> _getAuthHeaders(String token) {
     return {
@@ -43,17 +43,17 @@ class UserRepository {
     }
   }
 
-  Future<List<Seller>> getSellers() async {
-    try {
-      final response = await http.get(Uri.parse('$_baseUrl/gen/sellers'));
-      dynamic responseBody = _handleResponse(response);
-      List<dynamic> sellersList = responseBody['sellers'];
-      return sellersList.map((data) => Seller.fromMap(data)).toList();
-    } catch (e) {
-      print('getSellers error: ' + e.toString());
-      rethrow;
-    }
-  }
+  // Future<List<Seller>> getSellers() async {
+  //   try {
+  //     final response = await http.get(Uri.parse('$_baseUrl/gen/sellers'));
+  //     dynamic responseBody = _handleResponse(response);
+  //     List<dynamic> sellersList = responseBody['sellers'];
+  //     return sellersList.map((data) => Seller.fromMap(data)).toList();
+  //   } catch (e) {
+  //     print('getSellers error: ' + e.toString());
+  //     rethrow;
+  //   }
+  // }
 
   Future<List<Product>> searchProducts({int? sellerId, String? query}) async {
     try {
@@ -97,11 +97,18 @@ class UserRepository {
         headers: _getAuthHeaders(token),
       );
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> cartList = responseBody;
-      return cartList.map((data) => CartItem.fromMap(data)).toList();
+
+      if (responseBody is Map && responseBody.containsKey('items')) {
+        if (responseBody['items'] is List) {
+          List<dynamic> cartList = responseBody['items'];
+          return cartList.map((data) => CartItem.fromMap(data)).toList();
+        }
+      }
+      return [];
+
     } catch (e) {
       print('getCart error: $e');
-      rethrow;
+      return [];
     }
   }
 
@@ -165,7 +172,7 @@ class UserRepository {
         headers: _getAuthHeaders(token),
       );
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> orderList = responseBody;
+      List<dynamic> orderList = responseBody['orders'];
       return orderList.map((data) => Order.fromMap(data)).toList();
     } catch (e) {
       print('getOrdersByUser error: $e');
