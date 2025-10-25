@@ -1,8 +1,7 @@
 import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/user/screens/product_screen.dart';
-import 'features/user/screens/user_home_screen.dart';
+import 'app_router.dart';
 
 void main() => runApp(
   const ProviderScope(
@@ -16,16 +15,25 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'CNPTM_PTPM',
+      title: 'Food Sales App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.teal,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.teal,
+          foregroundColor: Colors.white,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            foregroundColor: Colors.white,
+          ),
+        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
       ),
-      home: const LoginScreen(),
-      routes: {
-        UserHomeScreen.routeName: (context) => const UserHomeScreen(),
-        ProductScreen.routeName: (context) => const ProductScreen(),
-      },
+      initialRoute: LoginScreen.routeName,
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }
