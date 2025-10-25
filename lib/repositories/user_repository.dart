@@ -43,17 +43,17 @@ class UserRepository {
     }
   }
 
-  // Future<List<Seller>> getSellers() async {
-  //   try {
-  //     final response = await http.get(Uri.parse('$_baseUrl/gen/sellers'));
-  //     dynamic responseBody = _handleResponse(response);
-  //     List<dynamic> sellersList = responseBody['sellers'];
-  //     return sellersList.map((data) => Seller.fromMap(data)).toList();
-  //   } catch (e) {
-  //     print('getSellers error: ' + e.toString());
-  //     rethrow;
-  //   }
-  // }
+  Future<List<Seller>> getSellers() async {
+    try {
+      final response = await http.get(Uri.parse('$_baseUrl/gen/sellers'));
+      dynamic responseBody = _handleResponse(response);
+      List<dynamic> sellersList = responseBody['sellers'];
+      return sellersList.map((data) => Seller.fromMap(data)).toList();
+    } catch (e) {
+      print('getSellers error: ' + e.toString());
+      rethrow;
+    }
+  }
 
   Future<List<Product>> searchProducts({int? sellerId, String? query}) async {
     try {

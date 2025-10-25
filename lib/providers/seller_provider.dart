@@ -26,11 +26,12 @@ class SellerState {
     List<Product>? myProducts,
     bool? isLoading,
     String? error,
+    bool clearError = false,
   }) {
     return SellerState(
       myProducts: myProducts ?? this.myProducts,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: clearError ? null : error ?? this.error,
     );
   }
 }
@@ -50,7 +51,9 @@ class SellerNotifier extends StateNotifier<SellerState> {
   Future<void> fetchMyProducts() async {
     final token = _getToken();
     if (token == null) return;
-    state = state.copyWith(isLoading: true, error: null);
+    if (!state.isLoading) {
+      state = state.copyWith(isLoading: true, clearError: true);
+    }
     try {
       final products = await _getRepo().getProductsBySeller(token);
       state = state.copyWith(isLoading: false, myProducts: products);
@@ -59,29 +62,56 @@ class SellerNotifier extends StateNotifier<SellerState> {
     }
   }
 
-  Future<void> addProduct(Product product, XFile? imageFile) async {
+  Future<bool> addProduct(Product product, XFile? imageFile) async {
     final token = _getToken();
-    if (token == null) return;
-    state = state.copyWith(isLoading: true);
+    if (token == null) return false;
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _getRepo().addProduct(token, product, imageFile);
+      await fetchMyProducts();
+      return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    } finally {
+      if (state.isLoading) {
+        state = state.copyWith(isLoading: false);
+      }
     }
-    fetchMyProducts();
   }
 
-  Future<void> updateProduct(Product product, XFile? imageFile) async {
+  Future<bool> updateProduct(Product product, XFile? imageFile) async {
     final token = _getToken();
-    if (token == null || product.id == null) return;
-    state = state.copyWith(isLoading: true);
+    if (token == null || product.id == null) return false;
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _getRepo().updateProduct(token, product.id!, product, imageFile);
+      await fetchMyProducts();
+      return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    } finally {
+      if (state.isLoading) {
+        state = state.copyWith(isLoading: false);
+      }
     }
-    fetchMyProducts();
   }
+
+  Future<bool> deleteProduct(int productId) async {
+    final token = _getToken();
+    if (token == null) return false;
+    try {
+      await _getRepo().deleteProduct(token, productId);
+      final updatedProducts = state.myProducts.where((p) => p.id != productId).toList();
+      state = state.copyWith(myProducts: updatedProducts, isLoading: false);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
 }
 
 final sellerProvider =

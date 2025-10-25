@@ -1,4 +1,3 @@
-// lib/models/order.dart
 import 'dart:convert';
 import 'package:cnpm_ptpm/models/order_item.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
@@ -16,6 +15,7 @@ class Order {
   List<OrderItem>? items;
   User? user;
   Seller? seller;
+  User? deliveryPerson;
 
   Order({
     this.id,
@@ -29,6 +29,7 @@ class Order {
     this.items,
     this.user,
     this.seller,
+    this.deliveryPerson,
   });
 
   factory Order.fromMap(Map<String, dynamic> map) {

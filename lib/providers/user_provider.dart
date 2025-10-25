@@ -17,10 +17,10 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) {
   return ref.watch(userRepositoryProvider).getCategories();
 });
 
-// final sellersProvider = FutureProvider<List<Seller>>((ref) {
-//   final repo = ref.watch(userRepositoryProvider);
-//   return repo.getSellers();
-// });
+final sellersProvider = FutureProvider<List<Seller>>((ref) {
+  final repo = ref.watch(userRepositoryProvider);
+  return repo.getSellers();
+});
 
 final productSearchProvider =
 FutureProvider.family<List<Product>, ({int? sellerId, String? query})>(
