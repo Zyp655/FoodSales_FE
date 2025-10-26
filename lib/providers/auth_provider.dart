@@ -67,6 +67,27 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> updateAddress(String newAddress) async {
+    final currentToken = token;
+    if (currentToken == null || state.currentUser == null) {
+      state = state.copyWith(error: 'User not logged in.');
+      return false;
+    }
+
+    try {
+      final updatedUser = await _authRepo.updateUserAddress(currentToken, newAddress);
+      state = state.copyWith(
+        currentUser: updatedUser.copyWith(token: currentToken),
+        isLoading: false,
+        error: null,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
   Future<bool> registerSeller(Map<String, dynamic> sellerData) async {
     state = state.copyWith(isLoading: true, error: null);
     try {

@@ -57,6 +57,23 @@ class AuthRepository {
     }
   }
 
+  Future<User> updateUserAddress(String token, String newAddress) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/user/address'),
+        headers: _getAuthHeaders(token),
+        body: json.encode({'address': newAddress}),
+      );
+      print('DEBUG: Update Address Status Code: ${response.statusCode}');
+      print('DEBUG: Update Address Response Body: ${response.body}');
+      dynamic responseBody = _handleResponse(response);
+      return User.fromMap(responseBody['user']);
+    } catch (e) {
+      print('updateUserAddress error: $e');
+      rethrow;
+    }
+  }
+
   Future<Seller> registerSeller(Map<String, dynamic> sellerData) async {
     try {
       final response = await http.post(

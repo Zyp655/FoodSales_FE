@@ -49,7 +49,31 @@ class User {
     };
   }
 
+
   String toJson() => json.encode(toMap());
 
   factory User.fromJson(String source) => User.fromMap(json.decode(source));
+}
+extension UserCopyWith on User {
+  User copyWith({
+    int? id,
+    String? name,
+    String? email,
+    String? role,
+    String? address,
+    double? lat,
+    double? lng,
+    String? token,
+  }) {
+    return User(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      email: email ?? this.email,
+      role: role ?? this.role,
+      address: address ?? this.address,
+      lat: lat ?? this.lat,
+      lng: lng ?? this.lng,
+      token: token ?? this.token,
+    );
+  }
 }

@@ -8,6 +8,8 @@ import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/transaction.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 
+import '../models/user.dart';
+
 class UserRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
 
@@ -65,8 +67,9 @@ class UserRepository {
         queryParams['query'] = query;
       }
 
-      final uri = Uri.parse('$_baseUrl/gen/products/search')
-          .replace(queryParameters: queryParams.isEmpty ? null : queryParams);
+      final uri = Uri.parse(
+        '$_baseUrl/gen/products/search',
+      ).replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       final response = await http.get(uri);
       dynamic responseBody = _handleResponse(response);
@@ -80,8 +83,9 @@ class UserRepository {
 
   Future<Product> getSingleProduct(int productId) async {
     try {
-      final response =
-      await http.get(Uri.parse('$_baseUrl/product/$productId'));
+      final response = await http.get(
+        Uri.parse('$_baseUrl/product/$productId'),
+      );
       dynamic responseBody = _handleResponse(response);
       return Product.fromMap(responseBody);
     } catch (e) {
@@ -98,14 +102,31 @@ class UserRepository {
       );
       dynamic responseBody = _handleResponse(response);
 
-      if (responseBody is Map && responseBody.containsKey('items')) {
-        if (responseBody['items'] is List) {
-          List<dynamic> cartList = responseBody['items'];
-          return cartList.map((data) => CartItem.fromMap(data)).toList();
+      print('DEBUG: Raw responseBody from /cart/: $responseBody');
+
+      List<CartItem> allCartItems = [];
+
+      if (responseBody is Map && responseBody.containsKey('data')) {
+        if (responseBody['data'] is List) {
+          List<dynamic> sellerGroups = responseBody['data'];
+
+          for (var sellerGroup in sellerGroups) {
+            if (sellerGroup is Map && sellerGroup.containsKey('items')) {
+              if (sellerGroup['items'] is List) {
+                List<dynamic> itemsInGroup = sellerGroup['items'];
+                for (var itemData in itemsInGroup) {
+                  if (itemData is Map<String, dynamic>) {
+                    allCartItems.add(CartItem.fromMap(itemData));
+                  }
+                }
+              }
+            }
+          }
         }
       }
-      return [];
 
+      print('DEBUG: Final combined cart items: ${allCartItems.length} items');
+      return allCartItems;
     } catch (e) {
       print('getCart error: $e');
       return [];
@@ -117,10 +138,7 @@ class UserRepository {
       final response = await http.post(
         Uri.parse('$_baseUrl/cart/add'),
         headers: _getAuthHeaders(token),
-        body: json.encode({
-          'product_id': productId,
-          'quantity': quantity,
-        }),
+        body: json.encode({'product_id': productId, 'quantity': quantity}),
       );
       dynamic responseBody = _handleResponse(response);
       return CartItem.fromMap(responseBody);
@@ -131,14 +149,15 @@ class UserRepository {
   }
 
   Future<CartItem> updateCartItem(
-      String token, int cartItemId, int quantity) async {
+    String token,
+    int cartItemId,
+    int quantity,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/cart/update/$cartItemId'),
         headers: _getAuthHeaders(token),
-        body: json.encode({
-          'quantity': quantity,
-        }),
+        body: json.encode({'quantity': quantity}),
       );
       dynamic responseBody = _handleResponse(response);
       return CartItem.fromMap(responseBody);
@@ -148,13 +167,20 @@ class UserRepository {
     }
   }
 
-  Future<Order> createOrder(String token, String deliveryAddress) async {
+  Future<Order> createOrder(
+    String token,
+    String deliveryAddress,
+    int sellerId,
+    double totalAmount,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/order/create'),
         headers: _getAuthHeaders(token),
         body: json.encode({
           'delivery_address': deliveryAddress,
+          'seller_id': sellerId,
+          'total_amount': totalAmount,
         }),
       );
       dynamic responseBody = _handleResponse(response);
@@ -180,7 +206,11 @@ class UserRepository {
     }
   }
 
-  Future<Order> updateOrderStatus(String token, int orderId, String status) async {
+  Future<Order> updateOrderStatus(
+    String token,
+    int orderId,
+    String status,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/order/$orderId/status'),
@@ -211,7 +241,10 @@ class UserRepository {
   }
 
   Future<Transaction> updateTransactionStatus(
-      String token, int transactionId, String status) async {
+    String token,
+    int transactionId,
+    String status,
+  ) async {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/transaction/$transactionId/status'),

@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
 import 'features/user/screens/my_order_screen.dart';
+import 'features/user/screens/product_detail_screen.dart';
+import 'features/user/screens/seller_detail_screen.dart';
 import 'features/user/screens/user_home_screen.dart';
-import 'features/user/screens/product_screen.dart';
 import 'features/user/screens/cart_screen.dart';
 import 'features/user/screens/transaction_screen.dart';
 import 'features/admin/screens/admin_dashboard_screen.dart';
@@ -27,12 +28,6 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const UserHomeScreen());
       case SellerDashboardScreen.routeName:
         return MaterialPageRoute(builder: (_) => const SellerDashboardScreen());
-      case ProductScreen.routeName:
-        final seller = settings.arguments;
-        if (seller != null && seller is Seller) {
-          return MaterialPageRoute(builder: (_) => const ProductScreen());
-        }
-        return _errorRoute('Missing arguments for ProductScreen');
       case CartScreen.routeName:
         return MaterialPageRoute(builder: (_) => const CartScreen());
       case MyOrdersScreen.routeName:
@@ -45,7 +40,18 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeliveryHomeScreen());
       case AssignedOrdersScreen.routeName:
         return MaterialPageRoute(builder: (_) => const AssignedOrdersScreen());
-
+      case SellerDetailScreen.routeName:
+        final seller = settings.arguments;
+        if (seller != null && seller is Seller) {
+          return MaterialPageRoute(builder: (_) => SellerDetailScreen(seller: seller));
+        }
+        return _errorRoute('Missing seller argument for SellerDetailScreen');
+      case ProductDetailScreen.routeName:
+        final product = settings.arguments;
+        if (product != null && product is Product) {
+          return MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product));
+        }
+        return _errorRoute('Missing product argument for ProductDetailScreen');
       case ManageUsersScreen.routeName:
         final user = settings.arguments;
         if (user != null && user is User) {

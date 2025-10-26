@@ -1,3 +1,4 @@
+// lib/providers/user_provider.dart
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
