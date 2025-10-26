@@ -1,7 +1,6 @@
-import 'package:flutter/foundation.dart'; // Use foundation for @immutable
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/product.dart';
-import 'package:cnpm_ptpm/models/order.dart'; // Import Order
 import 'package:cnpm_ptpm/repositories/seller_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
