@@ -1,6 +1,7 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart'; // Use foundation for @immutable
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/product.dart';
+import 'package:cnpm_ptpm/models/order.dart'; // Import Order
 import 'package:cnpm_ptpm/repositories/seller_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -103,7 +104,8 @@ class SellerNotifier extends StateNotifier<SellerState> {
     if (token == null) return false;
     try {
       await _getRepo().deleteProduct(token, productId);
-      final updatedProducts = state.myProducts.where((p) => p.id != productId).toList();
+      final updatedProducts =
+      state.myProducts.where((p) => p.id != productId).toList();
       state = state.copyWith(myProducts: updatedProducts, isLoading: false);
       return true;
     } catch (e) {
@@ -112,6 +114,19 @@ class SellerNotifier extends StateNotifier<SellerState> {
     }
   }
 
+  Future<bool> updateSellerOrderStatus(int orderId, String status) async {
+    final token = _getToken();
+    if (token == null) return false;
+    try {
+      await _getRepo().updateSellerOrderStatus(token, orderId, status);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    } finally {
+      state = state.copyWith(isLoading: false);
+    }
+  }
 }
 
 final sellerProvider =

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 import 'package:cnpm_ptpm/providers/seller_provider.dart';
@@ -6,6 +5,8 @@ import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+// Import the new image picker widget
+import '../widgets/image_picker_widget.dart';
 
 class ManageProductsScreen extends ConsumerStatefulWidget {
   static const routeName = '/manage-product';
@@ -25,7 +26,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
   late TextEditingController _descriptionController;
 
   int? _selectedCategoryId;
-  XFile? _selectedImage;
+  XFile? _selectedImageFile;
 
   bool get _isEditing => widget.product != null;
 
@@ -48,15 +49,10 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     super.dispose();
   }
 
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() {
-        _selectedImage = image;
-      });
-    }
+  void _handleImagePick(XFile? image) {
+    _selectedImageFile = image;
   }
+
 
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) {
@@ -73,27 +69,25 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     );
 
     final sellerNotifier = ref.read(sellerProvider.notifier);
-
+    bool success = false;
     if (_isEditing) {
-      await sellerNotifier.updateProduct(newProduct, _selectedImage);
+      success = await sellerNotifier.updateProduct(newProduct, _selectedImageFile);
     } else {
-      await sellerNotifier.addProduct(newProduct, _selectedImage);
+      success = await sellerNotifier.addProduct(newProduct, _selectedImageFile);
     }
 
-    if (mounted) {
+    if (success && mounted) {
       Navigator.of(context).pop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isLoading =
-    ref.watch(sellerProvider.select((state) => state.isLoading));
-
+    final isLoading = ref.watch(sellerProvider.select((state) => state.isLoading));
     final categoriesAsync = ref.watch(categoriesProvider);
 
     ref.listen(sellerProvider, (previous, next) {
-      if (next.error != null) {
+      if (previous != null && !next.isLoading && next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
         );
@@ -110,14 +104,9 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
           key: _formKey,
           child: Column(
             children: [
-              GestureDetector(
-                onTap: _pickImage,
-                child: CircleAvatar(
-                  radius: 60,
-                  backgroundColor: Colors.grey[200],
-                  backgroundImage: _buildImageProvider(),
-                  child: _buildImageOverlay(),
-                ),
+              ImagePickerWidget(
+                initialImageUrl: widget.product?.image,
+                onImagePicked: _handleImagePick,
               ),
               const SizedBox(height: 15),
               TextFormField(
@@ -133,12 +122,11 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
               const SizedBox(height: 15),
               categoriesAsync.when(
                 data: (categories) {
-                  if (_selectedCategoryId == null && categories.isNotEmpty) {
+                  if (_selectedCategoryId == null && categories.isNotEmpty && !_isEditing) {
                     _selectedCategoryId = categories.first.id;
                   }
-
                   return DropdownButtonFormField<int>(
-                    initialValue: _selectedCategoryId,
+                    value: _selectedCategoryId,
                     items: categories.map((Category category) {
                       return DropdownMenuItem<int>(
                         value: category.id,
@@ -162,12 +150,13 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(labelText: 'Price per Kg'),
-                keyboardType: TextInputType.number,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
                 validator: (value) {
                   if (value == null ||
                       value.isEmpty ||
-                      double.tryParse(value) == null) {
-                    return 'Please enter a valid price';
+                      double.tryParse(value) == null ||
+                      double.parse(value) <= 0) { // Check if > 0
+                    return 'Please enter a valid positive price';
                   }
                   return null;
                 },
@@ -177,6 +166,12 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
                 maxLines: 3,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a description';
+                  }
+                  return null;
+                },
               ),
               const SizedBox(height: 30),
               ElevatedButton(
@@ -193,24 +188,5 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
         ),
       ),
     );
-  }
-
-  ImageProvider? _buildImageProvider() {
-    if (_selectedImage != null) {
-      return FileImage(File(_selectedImage!.path));
-    }
-    if (_isEditing && widget.product?.image != null) {
-      return NetworkImage(
-          'http://10.0.2.2:8000/storage/${widget.product!.image!}');
-    }
-    return null;
-  }
-
-  Widget? _buildImageOverlay() {
-    if (_selectedImage == null &&
-        (_isEditing == false || widget.product?.image == null)) {
-      return const Icon(Icons.camera_alt, color: Colors.grey);
-    }
-    return null;
   }
 }

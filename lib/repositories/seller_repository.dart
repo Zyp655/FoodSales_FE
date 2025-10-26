@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../models/order.dart';
+
 class SellerRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
 
@@ -79,6 +81,21 @@ class SellerRepository {
       return Product.fromMap(responseBody);
     } catch (e) {
       print('addProduct error: $e');
+      rethrow;
+    }
+  }
+
+  Future<Order> updateSellerOrderStatus(String token, int orderId, String status) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/seller/orders/$orderId/status'), // Đảm bảo URL này đúng
+        headers: _getAuthHeaders(token),
+        body: json.encode({'status': status}),
+      );
+      dynamic responseBody = _handleResponse(response);
+      return Order.fromMap(responseBody['order'] ?? responseBody);
+    } catch (e) {
+      print('updateSellerOrderStatus error: $e');
       rethrow;
     }
   }
