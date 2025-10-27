@@ -8,6 +8,7 @@ class User {
   String? address;
   double? lat;
   double? lng;
+  String? phone; // <<< ADDED PHONE
   String? token;
 
   User({
@@ -18,6 +19,7 @@ class User {
     this.address,
     this.lat,
     this.lng,
+    this.phone, // <<< ADDED PHONE
     this.token,
   });
 
@@ -28,10 +30,11 @@ class User {
       id: (userData['id'] as num?)?.toInt(),
       name: userData['name'] as String?,
       email: userData['email'] as String?,
-      role: userData['role'] as String?,
+      role: userData['role'] as String? ?? userData['user_type'] as String?,
       address: userData['address'] as String?,
       lat: (userData['lat'] as num?)?.toDouble(),
       lng: (userData['lng'] as num?)?.toDouble(),
+      phone: userData['phone'] as String?,
       token: map['token'] as String?,
     );
   }
@@ -45,6 +48,7 @@ class User {
       'address': address,
       'lat': lat,
       'lng': lng,
+      'phone': phone,
       'token': token,
     };
   }
@@ -54,6 +58,7 @@ class User {
 
   factory User.fromJson(String source) => User.fromMap(json.decode(source));
 }
+
 extension UserCopyWith on User {
   User copyWith({
     int? id,
@@ -63,6 +68,7 @@ extension UserCopyWith on User {
     String? address,
     double? lat,
     double? lng,
+    String? phone,
     String? token,
   }) {
     return User(
@@ -73,6 +79,7 @@ extension UserCopyWith on User {
       address: address ?? this.address,
       lat: lat ?? this.lat,
       lng: lng ?? this.lng,
+      phone: phone ?? this.phone,
       token: token ?? this.token,
     );
   }

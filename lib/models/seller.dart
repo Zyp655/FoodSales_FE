@@ -7,6 +7,7 @@ class Seller {
   String? email;
   String? address;
   String? description;
+  String? phone;
 
   Seller({
     this.id,
@@ -15,16 +16,19 @@ class Seller {
     this.email,
     this.address,
     this.description,
+    this.phone,
   });
 
   factory Seller.fromMap(Map<String, dynamic> map) {
+    Map<String, dynamic> sellerData = map['user'] ?? map;
     return Seller(
-      id: (map['id'] as num?)?.toInt(),
-      name: map['name'] as String?,
-      image: map['image'] as String?,
-      email: map['email'] as String?,
-      address: map['address'] as String?,
-      description: map['description'] as String?,
+      id: (sellerData['id'] as num?)?.toInt(),
+      name: sellerData['name'] as String?,
+      image: sellerData['image'] as String?,
+      email: sellerData['email'] as String?,
+      address: sellerData['address'] as String?,
+      description: sellerData['description'] as String?,
+      phone: sellerData['phone'] as String?,
     );
   }
 
@@ -36,6 +40,7 @@ class Seller {
       'email': email,
       'address': address,
       'description': description,
+      'phone': phone,
     };
   }
 
@@ -43,4 +48,27 @@ class Seller {
 
   factory Seller.fromJson(String source) =>
       Seller.fromMap(json.decode(source));
+}
+
+
+extension SellerCopyWith on Seller {
+  Seller copyWith({
+    int? id,
+    String? name,
+    String? image,
+    String? email,
+    String? address,
+    String? description,
+    String? phone,
+  }) {
+    return Seller(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      image: image ?? this.image,
+      email: email ?? this.email,
+      address: address ?? this.address,
+      description: description ?? this.description,
+      phone: phone ?? this.phone,
+    );
   }
+}

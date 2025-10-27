@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/repositories/auth_repository.dart';
@@ -20,11 +20,12 @@ class AuthState {
     User? currentUser,
     bool? isLoading,
     String? error,
+    bool clearError = false,
   }) {
     return AuthState(
       currentUser: currentUser ?? this.currentUser,
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -37,7 +38,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   String? get token => state.currentUser?.token;
 
   Future<void> login(String email, String password) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       final user = await _authRepo.login(email, password);
       state = state.copyWith(isLoading: false, currentUser: user);
@@ -47,18 +48,22 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    if (token != null) {
-      await _authRepo.logout(token!);
+    final currentToken = token;
+    if (currentToken != null) {
+      try {
+        await _authRepo.logout(currentToken);
+      } catch (e) {
+        print("Logout API error: $e");
+      }
     }
     state = const AuthState();
   }
 
   Future<bool> registerUser(Map<String, dynamic> userData) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _authRepo.registerUser(userData);
-      final user =
-      await _authRepo.login(userData['email'], userData['password']);
+      final user = await _authRepo.login(userData['email'], userData['password']);
       state = state.copyWith(isLoading: false, currentUser: user);
       return true;
     } catch (e) {
@@ -70,16 +75,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<bool> updateAddress(String newAddress) async {
     final currentToken = token;
     if (currentToken == null || state.currentUser == null) {
-      state = state.copyWith(error: 'User not logged in.');
+      state = state.copyWith(error: 'User not logged in.', clearError: false);
       return false;
     }
-
     try {
       final updatedUser = await _authRepo.updateUserAddress(currentToken, newAddress);
       state = state.copyWith(
         currentUser: updatedUser.copyWith(token: currentToken),
         isLoading: false,
         error: null,
+        clearError: true,
       );
       return true;
     } catch (e) {
@@ -88,12 +93,49 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> updateContactInfo({String? phone, String? address}) async {
+    final currentToken = token;
+    if (currentToken == null || state.currentUser == null) {
+      state = state.copyWith(error: 'User not logged in.', clearError: false);
+      return false;
+    }
+    try {
+      final updatedUser = await _authRepo.updateContact(currentToken, phone: phone, address: address);
+      state = state.copyWith(
+        currentUser: updatedUser.copyWith(token: currentToken),
+        isLoading: false,
+        error: null,
+        clearError: true,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
+    final currentToken = token;
+    if (currentToken == null) {
+      state = state.copyWith(error: 'User not logged in.', clearError: false);
+      return false;
+    }
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      await _authRepo.changePassword(currentToken, currentPassword, newPassword, confirmPassword);
+      state = state.copyWith(isLoading: false, error: null);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
   Future<bool> registerSeller(Map<String, dynamic> sellerData) async {
-    state = state.copyWith(isLoading: true, error: null);
+    state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _authRepo.registerSeller(sellerData);
-      final user =
-      await _authRepo.login(sellerData['email'], sellerData['password']);
+      final user = await _authRepo.login(sellerData['email'], sellerData['password']);
       state = state.copyWith(isLoading: false, currentUser: user);
       return true;
     } catch (e) {
