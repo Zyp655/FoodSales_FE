@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'seller.dart'; // <<< IMPORT SELLER MODEL
 
 class Product {
   int? id;
@@ -9,6 +10,7 @@ class Product {
   double? pricePerKg;
   String? description;
   int? interactionCount;
+  Seller? seller;
 
   Product({
     this.id,
@@ -19,6 +21,7 @@ class Product {
     this.pricePerKg,
     this.description,
     this.interactionCount,
+    this.seller,
   });
 
   factory Product.fromMap(Map<String, dynamic> map) {
@@ -31,6 +34,14 @@ class Product {
       }
     }
 
+    int? interaction;
+    if (map['interaction_count'] != null) {
+      interaction = int.tryParse(map['interaction_count'].toString()) ?? 0;
+    } else {
+      interaction = 0;
+    }
+
+
     return Product(
       id: (map['id'] as num?)?.toInt(),
       sellerId: (map['seller_id'] as num?)?.toInt(),
@@ -39,9 +50,10 @@ class Product {
       image: map['image'] as String?,
       pricePerKg: price,
       description: map['description'] as String?,
-      interactionCount: map['interaction_count'] != null
-          ? int.tryParse(map['interaction_count'].toString()) ?? 0
-          : 0,
+      interactionCount: interaction,
+      seller: map['seller'] != null && map['seller'] is Map
+          ? Seller.fromMap(map['seller'] as Map<String, dynamic>)
+          : null,
     );
   }
 

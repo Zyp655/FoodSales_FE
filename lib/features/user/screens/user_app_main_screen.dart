@@ -1,14 +1,12 @@
 import 'package:cnpm_ptpm/features/user/screens/cart_screen.dart';
-import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../widgets/banner_section.dart';
 import '../widgets/seller_section.dart';
-
-final searchQueryProvider = StateProvider<String>((ref) => '');
+import 'search_screen.dart';
 
 class UserAppMainScreen extends ConsumerWidget {
   const UserAppMainScreen({super.key});
@@ -16,18 +14,6 @@ class UserAppMainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sellersAsync = ref.watch(sellersProvider);
-    final searchQuery = ref.watch(searchQueryProvider);
-
-    final filteredSellers = sellersAsync.when(
-      data: (sellers) => sellers.where((seller) {
-        return seller.name
-            ?.toLowerCase()
-            .contains(searchQuery.toLowerCase()) ??
-            false;
-      }).toList(),
-      loading: () => <Seller>[],
-      error: (e, s) => <Seller>[],
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -37,11 +23,31 @@ class UserAppMainScreen extends ConsumerWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.shopping_cart),
-            tooltip: 'Cart',
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
             onPressed: () {
-              Navigator.of(context).pushNamed(CartScreen.routeName);
+              Navigator.of(context).pushNamed(SearchScreen.routeName);
             },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Consumer(
+              builder: (context, ref, child) {
+                final cartState = ref.watch(cartProvider);
+                final cartItemCount = cartState.items.length;
+                return Badge(
+                  label: Text(cartItemCount.toString()),
+                  isLabelVisible: cartItemCount > 0,
+                  child: IconButton(
+                    icon: const Icon(Icons.shopping_cart_outlined),
+                    tooltip: 'Cart',
+                    onPressed: () {
+                      Navigator.of(context).pushNamed(CartScreen.routeName);
+                    },
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -52,23 +58,25 @@ class UserAppMainScreen extends ConsumerWidget {
         },
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(15.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search Sellers...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10.0),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 15),
+            GestureDetector(
+              onTap: () {
+                Navigator.of(context).pushNamed(SearchScreen.routeName);
+              },
+              child: Container(
+                margin: const EdgeInsets.all(15.0),
+                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
-                onChanged: (value) {
-                  ref.read(searchQueryProvider.notifier).state = value;
-                },
+                child: Row(
+                  children: [
+                    const Icon(Icons.search, color: Colors.grey),
+                    const SizedBox(width: 10),
+                    Text('Search Sellers or Products...',
+                        style: TextStyle(color: Colors.grey[700])),
+                  ],
+                ),
               ),
             ),
             sellersAsync.when(
@@ -82,22 +90,21 @@ class UserAppMainScreen extends ConsumerWidget {
               child: sellersAsync.when(
                 data: (sellers) {
                   if (sellers.isEmpty) {
-                    return const Center(child: Text('No sellers available right now.'));
-                  }
-                  if (filteredSellers.isEmpty && searchQuery.isNotEmpty) {
-                    return const Center(child: Text('No sellers found matching your search.'));
+                    return const Center(
+                        child: Text('No sellers available right now.'));
                   }
                   return ListView.builder(
                     padding: const EdgeInsets.only(top: 10),
-                    itemCount: filteredSellers.length,
+                    itemCount: sellers.length,
                     itemBuilder: (context, index) {
-                      final seller = filteredSellers[index];
+                      final seller = sellers[index];
                       return SellerSection(seller: seller);
                     },
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(child: Text('Error loading sellers: $err')),
+                error: (err, stack) =>
+                    Center(child: Text('Error loading sellers: $err')),
               ),
             ),
           ],

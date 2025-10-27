@@ -78,3 +78,7 @@ final userOrdersProvider = FutureProvider<List<Order>>((ref) {
   final repo = ref.read(userRepositoryProvider);
   return repo.getOrdersByUser(token);
 });
+final combinedSearchProvider = FutureProvider.autoDispose.family<SearchResult, String>((ref, query) {
+  final repo = ref.watch(userRepositoryProvider);
+  return repo.searchAll(query);
+});

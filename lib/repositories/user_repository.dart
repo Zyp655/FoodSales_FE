@@ -8,7 +8,11 @@ import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/transaction.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 
-import '../models/user.dart';
+class SearchResult {
+  final List<Product> products;
+  final List<Seller> sellers;
+  SearchResult({required this.products, required this.sellers});
+}
 
 class UserRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
@@ -26,10 +30,32 @@ class UserRepository {
       if (response.body.isEmpty) {
         return null;
       }
-      return json.decode(response.body);
+      try {
+        final decoded = json.decode(response.body);
+        if (decoded is Map) {
+          return decoded.cast<String, dynamic>();
+        } else if (decoded is List) {
+          return decoded;
+        }
+        return decoded;
+      } catch (e) {
+        print('API Error: Failed to decode JSON response - ${response.body}');
+        throw Exception('Invalid JSON response from server.');
+      }
     } else {
       print('API Error: ${response.statusCode} - ${response.body}');
-      throw Exception('Lỗi API: ${response.statusCode}, ${response.body}');
+      String errorMessage = 'API error: ${response.statusCode}';
+      try {
+        var decodedError = json.decode(response.body);
+        if (decodedError is Map && decodedError.containsKey('message')) {
+          errorMessage = decodedError['message'];
+        } else {
+          errorMessage = response.body;
+        }
+      } catch (_) {
+        errorMessage = response.body;
+      }
+      throw Exception(errorMessage);
     }
   }
 
@@ -37,11 +63,14 @@ class UserRepository {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/gen/categories'));
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> categoryList = responseBody['categories'];
-      return categoryList.map((data) => Category.fromMap(data)).toList();
+      if (responseBody is Map && responseBody.containsKey('categories') && responseBody['categories'] is List) {
+        List<dynamic> categoryList = responseBody['categories'];
+        return categoryList.map((data) => Category.fromMap(data)).toList();
+      }
+      return[];
     } catch (e) {
-      print('getCategories error: ' + e.toString());
-      rethrow;
+      print('getCategories error: $e');
+      return [];
     }
   }
 
@@ -49,11 +78,14 @@ class UserRepository {
     try {
       final response = await http.get(Uri.parse('$_baseUrl/gen/sellers'));
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> sellersList = responseBody['sellers'];
-      return sellersList.map((data) => Seller.fromMap(data)).toList();
+      if (responseBody is Map && responseBody.containsKey('sellers') && responseBody['sellers'] is List) {
+        List<dynamic> sellersList = responseBody['sellers'];
+        return sellersList.map((data) => Seller.fromMap(data)).toList();
+      }
+      return [];
     } catch (e) {
-      print('getSellers error: ' + e.toString());
-      rethrow;
+      print('getSellers error: $e');
+      return [];
     }
   }
 
@@ -64,7 +96,7 @@ class UserRepository {
         queryParams['seller_id'] = sellerId.toString();
       }
       if (query != null && query.isNotEmpty) {
-        queryParams['query'] = query;
+        queryParams['q'] = query;
       }
 
       final uri = Uri.parse(
@@ -73,11 +105,14 @@ class UserRepository {
 
       final response = await http.get(uri);
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> productsList = responseBody['products'];
-      return productsList.map((data) => Product.fromMap(data)).toList();
+      if (responseBody is Map && responseBody.containsKey('products') && responseBody['products'] is List) {
+        List<dynamic> productsList = responseBody['products'];
+        return productsList.map((data) => Product.fromMap(data)).toList();
+      }
+      return [];
     } catch (e) {
-      print('searchProducts error: ' + e.toString());
-      rethrow;
+      print('searchProducts error: $e');
+      return [];
     }
   }
 
@@ -87,7 +122,12 @@ class UserRepository {
         Uri.parse('$_baseUrl/product/$productId'),
       );
       dynamic responseBody = _handleResponse(response);
-      return Product.fromMap(responseBody);
+      if (responseBody is Map && responseBody.containsKey('data') && responseBody['data'] is Map) {
+        return Product.fromMap(responseBody['data'] as Map<String, dynamic>);
+      } else if (responseBody is Map<String, dynamic>) {
+        return Product.fromMap(responseBody);
+      }
+      throw Exception('Invalid format for single product');
     } catch (e) {
       print('getSingleProduct error: $e');
       rethrow;
@@ -102,21 +142,22 @@ class UserRepository {
       );
       dynamic responseBody = _handleResponse(response);
 
-      print('DEBUG: Raw responseBody from /cart/: $responseBody');
-
       List<CartItem> allCartItems = [];
 
       if (responseBody is Map && responseBody.containsKey('data')) {
         if (responseBody['data'] is List) {
           List<dynamic> sellerGroups = responseBody['data'];
-
           for (var sellerGroup in sellerGroups) {
             if (sellerGroup is Map && sellerGroup.containsKey('items')) {
               if (sellerGroup['items'] is List) {
                 List<dynamic> itemsInGroup = sellerGroup['items'];
                 for (var itemData in itemsInGroup) {
                   if (itemData is Map<String, dynamic>) {
-                    allCartItems.add(CartItem.fromMap(itemData));
+                    try {
+                      allCartItems.add(CartItem.fromMap(itemData));
+                    } catch (e) {
+                      print('Error parsing cart item: $itemData. Error: $e');
+                    }
                   }
                 }
               }
@@ -124,8 +165,6 @@ class UserRepository {
           }
         }
       }
-
-      print('DEBUG: Final combined cart items: ${allCartItems.length} items');
       return allCartItems;
     } catch (e) {
       print('getCart error: $e');
@@ -141,7 +180,10 @@ class UserRepository {
         body: json.encode({'product_id': productId, 'quantity': quantity}),
       );
       dynamic responseBody = _handleResponse(response);
-      return CartItem.fromMap(responseBody);
+      if (responseBody is Map<String, dynamic>) {
+        return CartItem.fromMap(responseBody['cart_item'] ?? responseBody);
+      }
+      throw Exception('Invalid format for add to cart response');
     } catch (e) {
       print('addToCart error: $e');
       rethrow;
@@ -149,10 +191,10 @@ class UserRepository {
   }
 
   Future<CartItem> updateCartItem(
-    String token,
-    int cartItemId,
-    int quantity,
-  ) async {
+      String token,
+      int cartItemId,
+      int quantity,
+      ) async {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/cart/update/$cartItemId'),
@@ -160,7 +202,10 @@ class UserRepository {
         body: json.encode({'quantity': quantity}),
       );
       dynamic responseBody = _handleResponse(response);
-      return CartItem.fromMap(responseBody);
+      if (responseBody is Map<String, dynamic>) {
+        return CartItem.fromMap(responseBody['cart_item'] ?? responseBody);
+      }
+      throw Exception('Invalid format for update cart item response');
     } catch (e) {
       print('updateCartItem error: $e');
       rethrow;
@@ -168,11 +213,11 @@ class UserRepository {
   }
 
   Future<Order> createOrder(
-    String token,
-    String deliveryAddress,
-    int sellerId,
-    double totalAmount,
-  ) async {
+      String token,
+      String deliveryAddress,
+      int sellerId,
+      double totalAmount,
+      ) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/order/create'),
@@ -184,7 +229,13 @@ class UserRepository {
         }),
       );
       dynamic responseBody = _handleResponse(response);
-      return Order.fromMap(responseBody);
+      if (responseBody is Map<String, dynamic>) {
+        final orderData = responseBody['order'] ?? responseBody;
+        if (orderData is Map<String, dynamic>) {
+          return Order.fromMap(orderData);
+        }
+      }
+      throw Exception('Invalid format for create order response');
     } catch (e) {
       print('createOrder error: $e');
       rethrow;
@@ -198,19 +249,22 @@ class UserRepository {
         headers: _getAuthHeaders(token),
       );
       dynamic responseBody = _handleResponse(response);
-      List<dynamic> orderList = responseBody['orders'];
-      return orderList.map((data) => Order.fromMap(data)).toList();
+      if (responseBody is Map && responseBody.containsKey('orders') && responseBody['orders'] is List) {
+        List<dynamic> orderList = responseBody['orders'];
+        return orderList.map((data) => Order.fromMap(data)).toList();
+      }
+      return [];
     } catch (e) {
       print('getOrdersByUser error: $e');
-      rethrow;
+      return [];
     }
   }
 
   Future<Order> updateOrderStatus(
-    String token,
-    int orderId,
-    String status,
-  ) async {
+      String token,
+      int orderId,
+      String status,
+      ) async {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/order/$orderId/status'),
@@ -218,10 +272,49 @@ class UserRepository {
         body: json.encode({'status': status}),
       );
       dynamic responseBody = _handleResponse(response);
-      return Order.fromMap(responseBody);
+      if (responseBody is Map<String, dynamic>) {
+        final orderData = responseBody['order'] ?? responseBody;
+        if (orderData is Map<String, dynamic>) {
+          return Order.fromMap(orderData);
+        }
+      }
+      throw Exception('Invalid format for update order status response');
     } catch (e) {
       print('updateOrderStatus error: $e');
       rethrow;
+    }
+  }
+
+  Future<SearchResult> searchAll(String query) async {
+    if (query.trim().isEmpty) {
+      return SearchResult(products: [], sellers: []);
+    }
+    try {
+      final uri = Uri.parse('$_baseUrl/gen/search').replace(queryParameters: {'q': query});
+      final response = await http.get(uri);
+      dynamic responseBody = _handleResponse(response);
+
+      List<Product> products = [];
+      List<Seller> sellers = [];
+
+      if (responseBody is Map && responseBody['results'] is Map) {
+        final results = responseBody['results'] as Map<String, dynamic>;
+
+        if (results['products'] is List) {
+          products = (results['products'] as List)
+              .map((data) => Product.fromMap(data))
+              .toList();
+        }
+        if (results['sellers'] is List) {
+          sellers = (results['sellers'] as List)
+              .map((data) => Seller.fromMap(data))
+              .toList();
+        }
+      }
+      return SearchResult(products: products, sellers: sellers);
+    } catch (e) {
+      print('searchAll error: $e');
+      return SearchResult(products: [], sellers: []);
     }
   }
 
@@ -233,7 +326,13 @@ class UserRepository {
         body: json.encode({'order_id': orderId}),
       );
       dynamic responseBody = _handleResponse(response);
-      return Transaction.fromMap(responseBody);
+      if (responseBody is Map<String, dynamic>) {
+        final txData = responseBody['transaction'] ?? responseBody;
+        if (txData is Map<String, dynamic>) {
+          return Transaction.fromMap(txData);
+        }
+      }
+      throw Exception('Invalid format for generate QR response');
     } catch (e) {
       print('generateQrTransaction error: $e');
       rethrow;
@@ -241,10 +340,10 @@ class UserRepository {
   }
 
   Future<Transaction> updateTransactionStatus(
-    String token,
-    int transactionId,
-    String status,
-  ) async {
+      String token,
+      int transactionId,
+      String status,
+      ) async {
     try {
       final response = await http.put(
         Uri.parse('$_baseUrl/transaction/$transactionId/status'),
@@ -252,7 +351,13 @@ class UserRepository {
         body: json.encode({'status': status}),
       );
       dynamic responseBody = _handleResponse(response);
-      return Transaction.fromMap(responseBody);
+      if (responseBody is Map<String, dynamic>) {
+        final txData = responseBody['transaction'] ?? responseBody;
+        if (txData is Map<String, dynamic>) {
+          return Transaction.fromMap(txData);
+        }
+      }
+      throw Exception('Invalid format for update transaction status response');
     } catch (e) {
       print('updateTransactionStatus error: $e');
       rethrow;

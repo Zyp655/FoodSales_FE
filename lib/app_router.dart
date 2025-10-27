@@ -2,9 +2,14 @@ import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:flutter/material.dart';
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
+import 'features/user/screens/change_password_screen.dart';
+import 'features/user/screens/contact_info_screen.dart';
 import 'features/user/screens/my_order_screen.dart';
 import 'features/user/screens/product_detail_screen.dart';
+import 'features/user/screens/profile_screen.dart';
+import 'features/user/screens/search_screen.dart';
 import 'features/user/screens/seller_detail_screen.dart';
+import 'features/user/screens/settings_screen.dart';
 import 'features/user/screens/user_home_screen.dart';
 import 'features/user/screens/cart_screen.dart';
 import 'features/user/screens/transaction_screen.dart';
@@ -36,10 +41,18 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const TransactionScreen());
       case AdminDashboardScreen.routeName:
         return MaterialPageRoute(builder: (_) => const AdminDashboardScreen());
+      case ContactInfoScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const ContactInfoScreen());
+      case ChangePasswordScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const ChangePasswordScreen());
       case DeliveryHomeScreen.routeName:
         return MaterialPageRoute(builder: (_) => const DeliveryHomeScreen());
       case AssignedOrdersScreen.routeName:
         return MaterialPageRoute(builder: (_) => const AssignedOrdersScreen());
+      case SettingsScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SettingsScreen());
+      case ProfileScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
       case SellerDetailScreen.routeName:
         final seller = settings.arguments;
         if (seller != null && seller is Seller) {
@@ -61,7 +74,8 @@ class AppRouter {
       case ManageProductsScreen.routeName:
         final product = settings.arguments as Product?;
         return MaterialPageRoute(builder: (_) => ManageProductsScreen(product: product));
-
+      case SearchScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SearchScreen());
 
       default:
         return _errorRoute('Route not found: ${settings.name}');
