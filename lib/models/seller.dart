@@ -20,7 +20,7 @@ class Seller {
   });
 
   factory Seller.fromMap(Map<String, dynamic> map) {
-    Map<String, dynamic> sellerData = map['user'] ?? map;
+    Map<String, dynamic> sellerData = map['seller'] ?? map;
     return Seller(
       id: (sellerData['id'] as num?)?.toInt(),
       name: sellerData['name'] as String?,
@@ -28,7 +28,7 @@ class Seller {
       email: sellerData['email'] as String?,
       address: sellerData['address'] as String?,
       description: sellerData['description'] as String?,
-      phone: sellerData['phone'] as String?,
+      phone: sellerData['phone'] as String?, // <<< Thêm parse
     );
   }
 
@@ -49,7 +49,6 @@ class Seller {
   factory Seller.fromJson(String source) =>
       Seller.fromMap(json.decode(source));
 }
-
 
 extension SellerCopyWith on Seller {
   Seller copyWith({

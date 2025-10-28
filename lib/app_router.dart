@@ -1,30 +1,42 @@
+import 'package:cnpm_ptpm/features/seller/screens/store_info_screen.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:flutter/material.dart';
+import 'features/auth/screens/splash_screen.dart'; // <<< Import SplashScreen
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
-import 'features/user/screens/change_password_screen.dart';
-import 'features/user/screens/contact_info_screen.dart';
+import 'features/seller/screens/seller_analytics_screen.dart';
+import 'features/seller/screens/seller_change_password_screen.dart';
+import 'features/seller/screens/seller_profile_screen.dart';
+import 'features/seller/screens/seller_settings_screen.dart';
 import 'features/user/screens/my_order_screen.dart';
-import 'features/user/screens/product_detail_screen.dart';
-import 'features/user/screens/profile_screen.dart';
-import 'features/user/screens/search_screen.dart';
-import 'features/user/screens/seller_detail_screen.dart';
-import 'features/user/screens/settings_screen.dart';
 import 'features/user/screens/user_home_screen.dart';
 import 'features/user/screens/cart_screen.dart';
 import 'features/user/screens/transaction_screen.dart';
+import 'features/user/screens/seller_detail_screen.dart';
+import 'features/user/screens/product_detail_screen.dart';
+import 'features/user/screens/profile_screen.dart';
+import 'features/user/screens/settings_screen.dart';
+import 'features/user/screens/contact_info_screen.dart';
+import 'features/user/screens/change_password_screen.dart';
+import 'features/user/screens/search_screen.dart';
 import 'features/admin/screens/admin_dashboard_screen.dart';
 import 'features/admin/screens/manage_users_screen.dart';
 import 'features/seller/screens/seller_dashboard_screen.dart';
 import 'features/seller/screens/manage_products_screen.dart';
+import 'features/seller/screens/seller_order_detail_screen.dart';
+import 'features/seller/screens/seller_orders_screen.dart';
 import 'features/delivery/screens/delivery_home_screen.dart';
 import 'features/delivery/screens/assigned_orders_screen.dart';
+import 'features/delivery/screens/delivery_order_detail_screen.dart';
 import 'models/user.dart';
 import 'models/product.dart';
+import 'models/order.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
+      case SplashScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SplashScreen());
       case LoginScreen.routeName:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case SignupScreen.routeName:
@@ -53,6 +65,18 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case ProfileScreen.routeName:
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case SearchScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SearchScreen());
+      case SellerProfileScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SellerProfileScreen());
+      case SellerSettingsScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SellerSettingsScreen());
+      case SellerAnalyticsScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SellerAnalyticsScreen());
+      case SellerChangePasswordScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SellerChangePasswordScreen());
+      case StoreInfoScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const StoreInfoScreen());
       case SellerDetailScreen.routeName:
         final seller = settings.arguments;
         if (seller != null && seller is Seller) {
@@ -74,8 +98,20 @@ class AppRouter {
       case ManageProductsScreen.routeName:
         final product = settings.arguments as Product?;
         return MaterialPageRoute(builder: (_) => ManageProductsScreen(product: product));
-      case SearchScreen.routeName:
-        return MaterialPageRoute(builder: (_) => const SearchScreen());
+      case SellerOrdersScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const SellerOrdersScreen());
+      case SellerOrderDetailScreen.routeName:
+        final order = settings.arguments;
+        if (order != null && order is Order) {
+          return MaterialPageRoute(builder: (_) => SellerOrderDetailScreen(order: order));
+        }
+        return _errorRoute('Missing order argument for SellerOrderDetailScreen');
+      case DeliveryOrderDetailScreen.routeName:
+        final order = settings.arguments;
+        if (order != null && order is Order) {
+          return MaterialPageRoute(builder: (_) => DeliveryOrderDetailScreen(order: order));
+        }
+        return _errorRoute('Missing order argument for DeliveryOrderDetailScreen');
 
       default:
         return _errorRoute('Route not found: ${settings.name}');

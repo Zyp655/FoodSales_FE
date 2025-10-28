@@ -8,8 +8,10 @@ class User {
   String? address;
   double? lat;
   double? lng;
-  String? phone; // <<< ADDED PHONE
+  String? phone;
   String? token;
+  String? image;
+  String? description;
 
   User({
     this.id,
@@ -19,8 +21,10 @@ class User {
     this.address,
     this.lat,
     this.lng,
-    this.phone, // <<< ADDED PHONE
+    this.phone,
     this.token,
+    this.image,
+    this.description,
   });
 
   factory User.fromMap(Map<String, dynamic> map) {
@@ -36,6 +40,8 @@ class User {
       lng: (userData['lng'] as num?)?.toDouble(),
       phone: userData['phone'] as String?,
       token: map['token'] as String?,
+      image: userData['image'] as String?,
+      description: userData['description'] as String?,
     );
   }
 
@@ -50,9 +56,10 @@ class User {
       'lng': lng,
       'phone': phone,
       'token': token,
+      'image': image,
+      'description': description,
     };
   }
-
 
   String toJson() => json.encode(toMap());
 
@@ -70,6 +77,8 @@ extension UserCopyWith on User {
     double? lng,
     String? phone,
     String? token,
+    String? image,
+    String? description,
   }) {
     return User(
       id: id ?? this.id,
@@ -81,6 +90,8 @@ extension UserCopyWith on User {
       lng: lng ?? this.lng,
       phone: phone ?? this.phone,
       token: token ?? this.token,
+      image: image ?? this.image,
+      description: description ?? this.description,
     );
   }
 }

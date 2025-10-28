@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
 import '../widgets/seller_product_list.dart';
 import 'seller_orders_screen.dart';
+import 'seller_profile_screen.dart'; // <<< THÊM IMPORT
 
 class SellerDashboardScreen extends ConsumerStatefulWidget {
   static const routeName = '/seller-dashboard';
@@ -21,6 +22,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
   final List<Widget> _pages = [
     const SellerProductList(),
     const SellerOrdersScreen(),
+    const SellerProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -39,8 +41,11 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    final bool showAppBar = _selectedIndex != 2;
+
     return Scaffold(
-      appBar: AppBar(
+      appBar: showAppBar ? AppBar(
         title: Text(_selectedIndex == 0 ? 'My Products' : 'Incoming Orders'),
         actions: [
           IconButton(
@@ -48,7 +53,7 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
             onPressed: _logout,
           ),
         ],
-      ),
+      ) : null,
       body: IndexedStack(
         index: _selectedIndex,
         children: _pages,
@@ -65,11 +70,17 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
             activeIcon: Icon(Icons.receipt_long),
             label: 'Orders',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
         currentIndex: _selectedIndex,
         selectedItemColor: Theme.of(context).primaryColor,
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
+        type: BottomNavigationBarType.fixed,
       ),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton(

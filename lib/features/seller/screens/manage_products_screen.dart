@@ -1,12 +1,14 @@
-import 'package:cnpm_ptpm/models/product.dart';
+import '../../../models/product.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 import 'package:cnpm_ptpm/providers/seller_provider.dart';
 import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
-// Import the new image picker widget
+import '../../../constants/currency_input_formatter.dart';
 import '../widgets/image_picker_widget.dart';
 
 class ManageProductsScreen extends ConsumerStatefulWidget {
@@ -35,9 +37,14 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.product?.name ?? '');
-    _priceController = TextEditingController(
-      text: widget.product?.pricePerKg?.toString() ?? '',
-    );
+
+    String initialPrice = '';
+    if (widget.product?.pricePerKg != null) {
+      final formatter = NumberFormat.decimalPattern('vi_VN');
+      initialPrice = formatter.format(widget.product!.pricePerKg!);
+    }
+    _priceController = TextEditingController(text: initialPrice);
+
     _descriptionController = TextEditingController(
       text: widget.product?.description ?? '',
     );
@@ -61,10 +68,13 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
       return;
     }
 
+    final priceString = _priceController.text.trim().replaceAll('.', '');
+    final priceDouble = double.tryParse(priceString) ?? 0.0;
+
     final newProduct = Product(
       id: widget.product?.id,
       name: _nameController.text.trim(),
-      pricePerKg: double.tryParse(_priceController.text.trim()) ?? 0.0,
+      pricePerKg: priceDouble,
       description: _descriptionController.text.trim(),
       categoryId: _selectedCategoryId,
       image: widget.product?.image,
@@ -133,7 +143,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                     _selectedCategoryId = categories.first.id;
                   }
                   return DropdownButtonFormField<int>(
-                    value: _selectedCategoryId,
+                    initialValue: _selectedCategoryId,
                     items: categories.map((Category category) {
                       return DropdownMenuItem<int>(
                         value: category.id,
@@ -147,7 +157,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                     },
                     decoration: const InputDecoration(labelText: 'Category'),
                     validator: (value) =>
-                        value == null ? 'Please select a category' : null,
+                    value == null ? 'Please select a category' : null,
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -156,17 +166,23 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
               const SizedBox(height: 15),
               TextFormField(
                 controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Price per Kg'),
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
+                decoration: const InputDecoration(labelText: 'Price per Kg (VND)'),
+                keyboardType: TextInputType.number,
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  CurrencyInputFormatter(),
+                ],
                 validator: (value) {
-                  if (value == null ||
-                      value.isEmpty ||
-                      double.tryParse(value) == null ||
-                      double.parse(value) <= 0) {
-                    // Check if > 0
-                    return 'Please enter a valid positive price';
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a valid price';
+                  }
+                  final priceString = value.replaceAll('.', '');
+                  final price = double.tryParse(priceString);
+                  if (price == null) {
+                    return 'Please enter a valid number';
+                  }
+                  if (price < 1000) {
+                    return 'Price must be at least 1000 VND';
                   }
                   return null;
                 },
@@ -175,7 +191,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
               TextFormField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(labelText: 'Description'),
-                maxLines: 3,
+                maxLines: 2,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter a description';

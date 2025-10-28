@@ -51,15 +51,21 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final ImageProvider? imageProvider = _buildImageProvider();
+
     return GestureDetector(
       onTap: _pickImage,
       child: CircleAvatar(
         radius: 60,
         backgroundColor: Colors.grey[200],
-        backgroundImage: _buildImageProvider(),
-        onBackgroundImageError: (e, s) {
+        backgroundImage: imageProvider,
+
+        onBackgroundImageError: imageProvider != null
+            ? (e, s) {
           print("Error loading initial image: $e");
-        },
+        }
+            : null,
+
         child: _buildImageOverlay(),
       ),
     );

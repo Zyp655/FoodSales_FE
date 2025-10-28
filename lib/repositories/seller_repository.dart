@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:image_picker/image_picker.dart';
-
-import '../models/order.dart';
+import 'package:cnpm_ptpm/models/order.dart';
 
 class SellerRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
@@ -18,10 +17,32 @@ class SellerRepository {
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
-      return json.decode(response.body);
+      try {
+        final decoded = json.decode(response.body);
+        if (decoded is Map) {
+          return decoded.cast<String, dynamic>();
+        } else if (decoded is List) {
+          return decoded;
+        }
+        return decoded;
+      } catch (e) {
+        print('API Error: Failed to decode JSON response - ${response.body}');
+        throw Exception('Invalid JSON response from server.');
+      }
     } else {
       print('API Error: ${response.statusCode} - ${response.body}');
-      throw Exception('Error api: ${response.statusCode}, ${response.body}');
+      String errorMessage = 'API error: ${response.statusCode}';
+      try {
+        var decodedError = json.decode(response.body);
+        if (decodedError is Map && decodedError.containsKey('message')) {
+          errorMessage = decodedError['message'];
+        } else {
+          errorMessage = response.body;
+        }
+      } catch (_) {
+        errorMessage = response.body;
+      }
+      throw Exception(errorMessage);
     }
   }
 
@@ -40,8 +61,7 @@ class SellerRepository {
           List<dynamic> productList = responseBody['data'];
           return productList.map((data) => Product.fromMap(data)).toList();
         }
-      }
-      else if (responseBody is List) {
+      } else if (responseBody is List) {
         List<dynamic> productList = responseBody;
         return productList.map((data) => Product.fromMap(data)).toList();
       }
@@ -78,7 +98,7 @@ class SellerRepository {
       final response = await http.Response.fromStream(streamedResponse);
 
       dynamic responseBody = _handleResponse(response);
-      return Product.fromMap(responseBody);
+      return Product.fromMap(responseBody['product'] ?? responseBody);
     } catch (e) {
       print('addProduct error: $e');
       rethrow;
@@ -88,7 +108,7 @@ class SellerRepository {
   Future<Order> updateSellerOrderStatus(String token, int orderId, String status) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/seller/orders/$orderId/status'), // Đảm bảo URL này đúng
+        Uri.parse('$_baseUrl/seller/orders/$orderId/status'),
         headers: _getAuthHeaders(token),
         body: json.encode({'status': status}),
       );
@@ -126,7 +146,7 @@ class SellerRepository {
       final response = await http.Response.fromStream(streamedResponse);
 
       dynamic responseBody = _handleResponse(response);
-      return Product.fromMap(responseBody);
+      return Product.fromMap(responseBody['product'] ?? responseBody);
     } catch (e) {
       print('updateProduct error: $e');
       rethrow;

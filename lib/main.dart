@@ -1,4 +1,4 @@
-import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
+import 'package:cnpm_ptpm/features/auth/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_router.dart';
@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
         useMaterial3: true,
       ),
-      initialRoute: LoginScreen.routeName,
+      initialRoute: SplashScreen.routeName,
       onGenerateRoute: AppRouter.generateRoute,
     );
   }

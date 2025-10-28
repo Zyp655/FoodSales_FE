@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'seller.dart'; // <<< IMPORT SELLER MODEL
+import 'seller.dart';
 
 class Product {
   int? id;

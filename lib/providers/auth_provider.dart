@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/repositories/auth_repository.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:image_picker/image_picker.dart';
 
 @immutable
 class AuthState {
@@ -143,6 +144,42 @@ class AuthNotifier extends StateNotifier<AuthState> {
       return false;
     }
   }
+
+  Future<bool> updateSellerInfo({
+    required String name,
+    required String email,
+    required String? phone,
+    required String address,
+    required String description,
+    XFile? imageFile,
+  }) async {
+    final currentToken = token;
+    if (currentToken == null || state.currentUser == null) {
+      state = state.copyWith(error: 'Seller not logged in.', clearError: false);
+      return false;
+    }
+    try {
+      final updatedUser = await _authRepo.updateSellerInfo(
+        currentToken,
+        name: name,
+        email: email,
+        phone: phone,
+        address: address,
+        description: description,
+        imageFile: imageFile,
+      );
+      state = state.copyWith(
+        currentUser: updatedUser.copyWith(token: currentToken),
+        isLoading: false,
+        error: null,
+        clearError: true,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
 }
 
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
@@ -153,3 +190,4 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepo = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepo);
 });
+

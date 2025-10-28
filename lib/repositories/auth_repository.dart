@@ -2,16 +2,20 @@ import 'dart:convert';
 import '../models/seller.dart';
 import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/user.dart';
+import 'package:image_picker/image_picker.dart'; // <<< Import XFile
 
 class AuthRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
 
-  Map<String, String> _getAuthHeaders(String token) {
-    return {
+  Map<String, String> _getAuthHeaders(String token, {bool isMultipart = false}) { // Added multipart flag
+    var headers = {
       'Authorization': 'Bearer $token',
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
     };
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
   }
 
   dynamic _handleResponse(http.Response response) {
@@ -38,6 +42,9 @@ class AuthRepository {
         var decodedError = json.decode(response.body);
         if (decodedError is Map && decodedError.containsKey('message')) {
           errorMessage = decodedError['message'];
+          if (decodedError.containsKey('errors')) {
+            errorMessage += ' ${decodedError['errors'].toString()}';
+          }
         } else {
           errorMessage = response.body;
         }
@@ -52,19 +59,14 @@ class AuthRepository {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/login'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: json.encode({'email': email, 'password': password}),
       );
       dynamic responseBody = _handleResponse(response);
-      if (responseBody == null ||
-          responseBody is! Map<String, dynamic> ||
-          !responseBody.containsKey('user')) {
+      if (responseBody == null || responseBody is! Map || !responseBody.containsKey('user')) {
         throw Exception('Invalid login response format.');
       }
-      return User.fromMap(responseBody);
+      return User.fromMap(responseBody as Map<String,dynamic>);
     } catch (e) {
       print('login error: $e');
       rethrow;
@@ -75,19 +77,14 @@ class AuthRepository {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/register/user'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: json.encode(userData),
       );
       dynamic responseBody = _handleResponse(response);
-      if (responseBody == null ||
-          responseBody is! Map<String, dynamic> ||
-          !responseBody.containsKey('user')) {
+      if (responseBody == null || responseBody is! Map || !responseBody.containsKey('user')) {
         throw Exception('Invalid register response format.');
       }
-      return User.fromMap(responseBody);
+      return User.fromMap(responseBody as Map<String,dynamic>);
     } catch (e) {
       print('registerUser error: $e');
       rethrow;
@@ -101,65 +98,41 @@ class AuthRepository {
         headers: _getAuthHeaders(token),
         body: json.encode({'address': newAddress}),
       );
-      print('DEBUG: Update Address Status Code: ${response.statusCode}');
-      print('DEBUG: Update Address Response Body: ${response.body}');
       dynamic responseBody = _handleResponse(response);
-      if (responseBody == null ||
-          responseBody is! Map<String, dynamic> ||
-          !responseBody.containsKey('user')) {
+      if (responseBody == null || responseBody is! Map || !responseBody.containsKey('user')) {
         throw Exception('Invalid update address response format.');
       }
-      return User.fromMap(responseBody);
+      return User.fromMap(responseBody as Map<String,dynamic>);
     } catch (e) {
       print('updateUserAddress error: $e');
       rethrow;
     }
   }
 
-  Future<User> updateContact(
-    String token, {
-    String? phone,
-    String? address,
-  }) async {
+  Future<User> updateContact(String token, {String? phone, String? address}) async {
     try {
       Map<String, dynamic> body = {};
-      if (phone != null) {
-        body['phone'] = phone;
-      }
-      if (address != null) {
-        body['address'] = address;
-      }
-
-      if (body.isEmpty) {
-        return getAuthenticatedUser(token);
-      }
+      if (phone != null) body['phone'] = phone;
+      if (address != null) body['address'] = address;
+      if (body.isEmpty) return getAuthenticatedUser(token);
 
       final response = await http.put(
         Uri.parse('$_baseUrl/user/contact'),
         headers: _getAuthHeaders(token),
         body: json.encode(body),
       );
-      print('DEBUG: Update Contact Status Code: ${response.statusCode}');
-      print('DEBUG: Update Contact Response Body: ${response.body}');
       dynamic responseBody = _handleResponse(response);
-      if (responseBody == null ||
-          responseBody is! Map<String, dynamic> ||
-          !responseBody.containsKey('user')) {
+      if (responseBody == null || responseBody is! Map || !responseBody.containsKey('user')) {
         throw Exception('Invalid update contact response format.');
       }
-      return User.fromMap(responseBody);
+      return User.fromMap(responseBody as Map<String,dynamic>);
     } catch (e) {
       print('updateContact error: $e');
       rethrow;
     }
   }
 
-  Future<void> changePassword(
-    String token,
-    String currentPassword,
-    String newPassword,
-    String confirmPassword,
-  ) async {
+  Future<void> changePassword(String token, String currentPassword, String newPassword, String confirmPassword) async {
     try {
       final response = await http.post(
         Uri.parse('$_baseUrl/user/password'),
@@ -170,8 +143,6 @@ class AuthRepository {
           'new_password_confirmation': confirmPassword,
         }),
       );
-      print('DEBUG: Change Password Status Code: ${response.statusCode}');
-      print('DEBUG: Change Password Response Body: ${response.body}');
       _handleResponse(response);
     } catch (e) {
       print('changePassword error: $e');
@@ -179,20 +150,65 @@ class AuthRepository {
     }
   }
 
+  Future<User> updateSellerInfo(
+      String token,
+      {required String name,
+        required String email,
+        required String? phone,
+        required String address,
+        required String description,
+        XFile? imageFile}) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/seller/info'),
+      );
+
+      request.headers.addAll(_getAuthHeaders(token, isMultipart: true));
+
+      request.fields['_method'] = 'PUT';
+      request.fields['name'] = name;
+      request.fields['email'] = email;
+      request.fields['address'] = address;
+      request.fields['description'] = description;
+      if (phone != null && phone.isNotEmpty) {
+        request.fields['phone'] = phone;
+      }
+
+      if (imageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', imageFile.path),
+        );
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('DEBUG: Update Seller Info Status Code: ${response.statusCode}');
+      print('DEBUG: Update Seller Info Response Body: ${response.body}');
+
+      dynamic responseBody = _handleResponse(response);
+      if (responseBody == null || responseBody is! Map || !responseBody.containsKey('user')) {
+        throw Exception('Invalid update seller info response format.');
+      }
+      return User.fromMap(responseBody as Map<String,dynamic>);
+    } catch (e) {
+      print('updateSellerInfo error: $e');
+      rethrow;
+    }
+  }
+
+
   Future<Seller> registerSeller(Map<String, dynamic> sellerData) async {
     try {
+
       final response = await http.post(
         Uri.parse('$_baseUrl/auth/register/seller'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
+        headers: {'Content-Type': 'application/json', 'Accept': 'application/json'},
         body: json.encode(sellerData),
       );
       dynamic responseBody = _handleResponse(response);
-      if (responseBody == null ||
-          responseBody is! Map<String, dynamic> ||
-          !responseBody.containsKey('seller')) {
+      if (responseBody == null || responseBody is! Map || !responseBody.containsKey('seller')) {
         throw Exception('Invalid register seller response format.');
       }
       return Seller.fromMap(responseBody['seller'] as Map<String, dynamic>);
@@ -225,7 +241,7 @@ class AuthRepository {
       if (responseBody == null || responseBody is! Map) {
         throw Exception('Invalid authenticated user response format.');
       }
-      return User.fromMap(responseBody as Map<String, dynamic>);
+      return User.fromMap(responseBody as Map<String,dynamic>);
     } catch (e) {
       print('getAuthenticatedUser error: $e');
       rethrow;
