@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class ProductGridItem extends StatelessWidget {
   final Product product;
+
   const ProductGridItem({super.key, required this.product});
 
   @override
@@ -13,10 +14,9 @@ class ProductGridItem extends StatelessWidget {
       elevation: 2.0,
       child: InkWell(
         onTap: () {
-          Navigator.of(context).pushNamed(
-            ProductDetailScreen.routeName,
-            arguments: product,
-          );
+          Navigator.of(
+            context,
+          ).pushNamed(ProductDetailScreen.routeName, arguments: product);
         },
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,8 +26,10 @@ class ProductGridItem extends StatelessWidget {
               child: Image.network(
                 'http://10.0.2.2:8000/storage/${product.image ?? ''}',
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) =>
-                    Container(color: Colors.grey[200], child: const Center(child: Icon(Icons.image_not_supported))),
+                errorBuilder: (context, error, stackTrace) => Container(
+                  color: Colors.grey[200],
+                  child: const Center(child: Icon(Icons.image_not_supported)),
+                ),
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
                   return const Center(child: CircularProgressIndicator());
@@ -41,7 +43,9 @@ class ProductGridItem extends StatelessWidget {
                 children: [
                   Text(
                     product.name ?? 'No Name',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w500),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w500,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
