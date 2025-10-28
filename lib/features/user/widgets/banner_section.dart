@@ -30,7 +30,7 @@ class BannerSection extends StatelessWidget {
             image: bannerImage,
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.3),
+              Colors.black,
               BlendMode.darken,
             ),
             onError: (exception, stackTrace) {},
@@ -49,7 +49,7 @@ class BannerSection extends StatelessWidget {
                   shadows: [
                     Shadow(
                       blurRadius: 4.0,
-                      color: Colors.black.withOpacity(0.5),
+                      color: Colors.black,
                       offset: const Offset(1.0, 1.0),
                     ),
                   ]

@@ -1,5 +1,4 @@
 import 'package:cnpm_ptpm/features/user/screens/seller_detail_screen.dart';
-import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
@@ -32,7 +31,7 @@ class SellerSection extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
+            color: Colors.grey,
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),
@@ -51,7 +50,9 @@ class SellerSection extends ConsumerWidget {
                   backgroundImage: (seller.image != null)
                       ? NetworkImage('http://10.0.2.2:8000/storage/${seller.image!}')
                       : null,
-                  onBackgroundImageError: (e, s) {},
+                  onBackgroundImageError: (seller.image != null)
+                      ? (e, s) { print('Image load error: $e'); }
+                      : null,
                   child: (seller.image == null)
                       ? const Icon(Icons.storefront, size: 25)
                       : null,

@@ -27,7 +27,7 @@ class UserAppMainScreen extends ConsumerWidget {
             child: Consumer(
               builder: (context, ref, child) {
                 final cartState = ref.watch(cartProvider);
-                final cartItemCount = cartState.items.length;
+                final cartItemCount = cartState.totalItemCount;
                 return Badge(
                   label: Text(cartItemCount.toString()),
                   isLabelVisible: cartItemCount > 0,

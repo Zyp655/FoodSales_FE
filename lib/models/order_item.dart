@@ -19,12 +19,35 @@ class OrderItem {
   });
 
   factory OrderItem.fromMap(Map<String, dynamic> map) {
+
+    double? safePrice;
+    var priceValue = map['price_at_purchase'];
+    if (priceValue != null) {
+      if (priceValue is num) {
+        safePrice = priceValue.toDouble();
+      } else if (priceValue is String) {
+        safePrice = double.tryParse(priceValue);
+      }
+    }
+
+    int? safeQuantity;
+    var quantityValue = map['quantity'];
+    if (quantityValue != null) {
+      if (quantityValue is num) {
+        safeQuantity = quantityValue.toInt();
+      } else if (quantityValue is String) {
+        safeQuantity = int.tryParse(quantityValue);
+      }
+    }
+
     return OrderItem(
       id: (map['id'] as num?)?.toInt(),
       orderId: (map['order_id'] as num?)?.toInt(),
       productId: (map['product_id'] as num?)?.toInt(),
-      quantity: (map['quantity'] as num?)?.toInt(),
-      priceAtPurchase: (map['price_at_purchase'] as num?)?.toDouble(),
+
+      quantity: safeQuantity,
+      priceAtPurchase: safePrice,
+
       product:
       map['product'] != null ? Product.fromMap(map['product']) : null,
     );

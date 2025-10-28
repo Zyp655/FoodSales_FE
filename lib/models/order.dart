@@ -33,12 +33,23 @@ class Order {
   });
 
   factory Order.fromMap(Map<String, dynamic> map) {
+    // Logic chuyển đổi an toàn cho totalAmount
+    double? safeTotalAmount;
+    var totalAmountValue = map['total_amount'];
+    if (totalAmountValue != null) {
+      if (totalAmountValue is num) {
+        safeTotalAmount = totalAmountValue.toDouble();
+      } else if (totalAmountValue is String) {
+        safeTotalAmount = double.tryParse(totalAmountValue);
+      }
+    }
+
     return Order(
       id: (map['id'] as num?)?.toInt(),
       userId: (map['user_id'] as num?)?.toInt(),
       sellerId: (map['seller_id'] as num?)?.toInt(),
       deliveryPersonId: (map['delivery_person_id'] as num?)?.toInt(),
-      totalAmount: (map['total_amount'] as num?)?.toDouble(),
+      totalAmount: safeTotalAmount,
       status: map['status'] as String?,
       deliveryAddress: map['delivery_address'] as String?,
       createdAt: map['created_at'] as String?,

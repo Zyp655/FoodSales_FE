@@ -16,7 +16,9 @@ class SellerHeader extends StatelessWidget {
             backgroundImage: (seller.image != null)
                 ? NetworkImage('http://10.0.2.2:8000/storage/${seller.image!}')
                 : null,
-            onBackgroundImageError: (e, s) {},
+            onBackgroundImageError: (seller.image != null)
+                ? (e, s) { print('Image load error: $e'); }
+                : null,
             child: (seller.image == null) ? const Icon(Icons.storefront, size: 30) : null,
           ),
           const SizedBox(width: 15),

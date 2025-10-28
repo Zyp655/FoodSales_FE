@@ -48,10 +48,13 @@ class GroupedProductList extends StatelessWidget {
                         backgroundImage: (product.image != null)
                             ? NetworkImage('http://10.0.2.2:8000/storage/${product.image!}')
                             : null,
-                        onBackgroundImageError: (exception, stackTrace) {},
+                        onBackgroundImageError: (product.image != null)
+                            ? (e, s) { print('Image load error: $e'); }
+                            : null,
                         child: (product.image == null)
                             ? const Icon(Icons.shopping_bag)
                             : null,
+
                       ),
                       title: Text(product.name ?? 'N/A'),
                       subtitle: Text(product.description ?? ''),

@@ -60,7 +60,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           decoration: InputDecoration(
             hintText: 'Search products or sellers...',
             border: InputBorder.none,
-            hintStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+            hintStyle: TextStyle(color: Colors.white),
           ),
           style: const TextStyle(color: Colors.white),
           cursorColor: Colors.white,
@@ -139,7 +139,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         backgroundImage: (product.image != null)
             ? NetworkImage('http://10.0.2.2:8000/storage/${product.image!}')
             : null,
-        onBackgroundImageError: (e, s) {},
+        onBackgroundImageError: (product.image != null)
+            ? (e, s) { print('Image load error: $e'); }
+            : null,
         child: (product.image == null) ? const Icon(Icons.shopping_bag) : null,
       ),
       title: Text(product.name ?? 'No Name'),
@@ -160,7 +162,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         backgroundImage: (seller.image != null)
             ? NetworkImage('http://10.0.2.2:8000/storage/${seller.image!}')
             : null,
-        onBackgroundImageError: (e, s) {},
+        onBackgroundImageError: (seller.image != null)
+            ? (e, s) { print('Image load error: $e'); }
+            : null,
         child: (seller.image == null) ? const Icon(Icons.storefront) : null,
       ),
       title: Text(seller.name ?? 'No Name'),

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/product.dart';
+import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/repositories/seller_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -31,7 +32,7 @@ class SellerState {
     return SellerState(
       myProducts: myProducts ?? this.myProducts,
       isLoading: isLoading ?? this.isLoading,
-      error: clearError ? null : error ?? this.error,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }
@@ -118,12 +119,11 @@ class SellerNotifier extends StateNotifier<SellerState> {
     if (token == null) return false;
     try {
       await _getRepo().updateSellerOrderStatus(token, orderId, status);
+      _ref.invalidate(sellerOrdersProvider);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      print('updateSellerOrderStatus Error: $e');
       return false;
-    } finally {
-      state = state.copyWith(isLoading: false);
     }
   }
 }
@@ -131,4 +131,13 @@ class SellerNotifier extends StateNotifier<SellerState> {
 final sellerProvider =
 StateNotifierProvider<SellerNotifier, SellerState>((ref) {
   return SellerNotifier(ref);
+});
+
+final sellerOrdersProvider = FutureProvider.autoDispose<List<Order>>((ref) async {
+  final token = ref.watch(authProvider).currentUser?.token;
+  if (token == null) {
+    throw Exception('Not authenticated');
+  }
+  final repo = ref.watch(sellerRepositoryProvider);
+  return repo.getSellerOrders(token);
 });

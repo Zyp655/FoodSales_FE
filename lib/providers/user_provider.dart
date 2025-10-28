@@ -1,13 +1,12 @@
-// lib/providers/user_provider.dart
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart' hide Category;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/product.dart';
-import 'package:cnpm_ptpm/models/cart_item.dart';
 import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 import 'package:cnpm_ptpm/repositories/user_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
+import 'package:cnpm_ptpm/models/cart_seller_group.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 final userRepositoryProvider = Provider<UserRepository>((ref) {
@@ -33,12 +32,22 @@ FutureProvider.family<List<Product>, ({int? sellerId, String? query})>(
 
 @immutable
 class CartState {
-  final List<CartItem> items;
+  final List<CartSellerGroup> sellerGroups;
   final bool isLoading;
-  const CartState({this.items = const [], this.isLoading = false});
-  CartState copyWith({List<CartItem>? items, bool? isLoading}) {
+  const CartState({this.sellerGroups = const [], this.isLoading = false});
+
+  CartState copyWith({List<CartSellerGroup>? sellerGroups, bool? isLoading}) {
     return CartState(
-        items: items ?? this.items, isLoading: isLoading ?? this.isLoading);
+        sellerGroups: sellerGroups ?? this.sellerGroups,
+        isLoading: isLoading ?? this.isLoading);
+  }
+
+  double get grandTotal {
+    return sellerGroups.fold(0.0, (sum, group) => sum + group.totalAmountBySeller);
+  }
+
+  int get totalItemCount {
+    return sellerGroups.fold(0, (sum, group) => sum + group.items.length);
   }
 }
 
@@ -55,16 +64,47 @@ class CartNotifier extends StateNotifier<CartState> {
     if (token == null) return;
     state = state.copyWith(isLoading: true);
     final repo = _ref.read(userRepositoryProvider);
-    final items = await repo.getCart(token);
-    state = state.copyWith(items: items, isLoading: false);
+    final groups = await repo.getCart(token);
+    state = state.copyWith(sellerGroups: groups, isLoading: false);
   }
 
   Future<void> addToCart(int productId, int quantity) async {
     final token = _getToken();
     if (token == null) return;
     final repo = _ref.read(userRepositoryProvider);
-    await repo.addToCart(token, productId, quantity);
-    fetchCart();
+    try {
+      await repo.addToCart(token, productId, quantity);
+      await fetchCart();
+    } catch (e) {
+      print("addToCart provider error: $e");
+    }
+  }
+
+  Future<void> removeFromCart(int cartItemId) async {
+    final token = _getToken();
+    if (token == null) return;
+    final repo = _ref.read(userRepositoryProvider);
+
+    final List<CartSellerGroup> optimisticGroups = [];
+    for (var group in state.sellerGroups) {
+      final updatedItems =
+      group.items.where((item) => item.id != cartItemId).toList();
+      if (updatedItems.isNotEmpty) {
+        optimisticGroups.add(CartSellerGroup(
+            sellerId: group.sellerId,
+            sellerName: group.sellerName,
+            totalAmountBySeller: group.totalAmountBySeller,
+            items: updatedItems));
+      }
+    }
+    state = state.copyWith(sellerGroups: optimisticGroups);
+
+    final success = await repo.removeFromCart(token, cartItemId);
+    await fetchCart();
+
+    if (!success) {
+      print("Failed to remove item from backend.");
+    }
   }
 }
 
@@ -78,7 +118,9 @@ final userOrdersProvider = FutureProvider<List<Order>>((ref) {
   final repo = ref.read(userRepositoryProvider);
   return repo.getOrdersByUser(token);
 });
-final combinedSearchProvider = FutureProvider.autoDispose.family<SearchResult, String>((ref, query) {
+
+final combinedSearchProvider =
+FutureProvider.autoDispose.family<SearchResult, String>((ref, query) {
   final repo = ref.watch(userRepositoryProvider);
   return repo.searchAll(query);
 });

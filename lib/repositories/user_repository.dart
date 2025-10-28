@@ -8,6 +8,8 @@ import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/transaction.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 
+import '../models/cart_seller_group.dart';
+
 class SearchResult {
   final List<Product> products;
   final List<Seller> sellers;
@@ -134,7 +136,7 @@ class UserRepository {
     }
   }
 
-  Future<List<CartItem>> getCart(String token) async {
+  Future<List<CartSellerGroup>> getCart(String token) async {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/cart/'),
@@ -142,30 +144,27 @@ class UserRepository {
       );
       dynamic responseBody = _handleResponse(response);
 
-      List<CartItem> allCartItems = [];
+      print('DEBUG: Raw responseBody from /cart/: $responseBody');
+
+      List<CartSellerGroup> sellerGroupsList = [];
 
       if (responseBody is Map && responseBody.containsKey('data')) {
         if (responseBody['data'] is List) {
-          List<dynamic> sellerGroups = responseBody['data'];
-          for (var sellerGroup in sellerGroups) {
-            if (sellerGroup is Map && sellerGroup.containsKey('items')) {
-              if (sellerGroup['items'] is List) {
-                List<dynamic> itemsInGroup = sellerGroup['items'];
-                for (var itemData in itemsInGroup) {
-                  if (itemData is Map<String, dynamic>) {
-                    try {
-                      allCartItems.add(CartItem.fromMap(itemData));
-                    } catch (e) {
-                      print('Error parsing cart item: $itemData. Error: $e');
-                    }
-                  }
-                }
+          List<dynamic> rawSellerGroups = responseBody['data'];
+
+          for (var groupData in rawSellerGroups) {
+            if (groupData is Map<String, dynamic>) {
+              try {
+                sellerGroupsList.add(CartSellerGroup.fromMap(groupData));
+              } catch (e) {
+                print('Error parsing seller cart group: $groupData. Error: $e');
               }
             }
           }
         }
       }
-      return allCartItems;
+      print('DEBUG: Final seller cart groups: ${sellerGroupsList.length} groups');
+      return sellerGroupsList;
     } catch (e) {
       print('getCart error: $e');
       return [];
@@ -315,6 +314,20 @@ class UserRepository {
     } catch (e) {
       print('searchAll error: $e');
       return SearchResult(products: [], sellers: []);
+    }
+  }
+
+  Future<bool> removeFromCart(String token, int cartItemId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$_baseUrl/cart/remove/$cartItemId'),
+        headers: _getAuthHeaders(token),
+      );
+      _handleResponse(response);
+      return true;
+    } catch (e) {
+      print('removeFromCart error: $e');
+      return false;
     }
   }
 

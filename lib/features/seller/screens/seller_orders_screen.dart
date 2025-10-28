@@ -1,12 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cnpm_ptpm/models/order.dart';
+import 'package:cnpm_ptpm/providers/seller_provider.dart';
 import '../widgets/seller_order_list_item.dart';
-
-final sellerOrdersProvider = FutureProvider<List<Order>>((ref) async {
-  await Future.delayed(const Duration(seconds: 1));
-  return [];
-});
 
 class SellerOrdersScreen extends ConsumerWidget {
   static const routeName = '/seller-orders';
@@ -25,10 +20,10 @@ class SellerOrdersScreen extends ConsumerWidget {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('No incoming orders.'),
+                  const Text('No order have found.'),
                   ElevatedButton(
                     onPressed: () => ref.invalidate(sellerOrdersProvider),
-                    child: Text('Refresh'),
+                    child: const Text('Reload'),
                   ),
                 ],
               ),
@@ -45,7 +40,7 @@ class SellerOrdersScreen extends ConsumerWidget {
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (err, stack) =>
-            Center(child: Text('Error loading orders: $err')),
+            Center(child: Text('opss have error for orders: $err')),
       ),
     );
   }

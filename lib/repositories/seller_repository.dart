@@ -7,11 +7,15 @@ import 'package:cnpm_ptpm/models/order.dart';
 class SellerRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
 
-  Map<String, String> _getAuthHeaders(String token) {
-    return {
+  Map<String, String> _getAuthHeaders(String token, {bool isMultipart = false}) {
+    var headers = {
       'Authorization': 'Bearer $token',
       'Accept': 'application/json',
     };
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
   }
 
   dynamic _handleResponse(http.Response response) {
@@ -46,6 +50,25 @@ class SellerRepository {
     }
   }
 
+  Future<List<Order>> getSellerOrders(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/seller/orders/'),
+        headers: _getAuthHeaders(token),
+      );
+      dynamic responseBody = _handleResponse(response);
+
+      if (responseBody is Map && responseBody.containsKey('orders') && responseBody['orders'] is List) {
+        List<dynamic> orderList = responseBody['orders'];
+        return orderList.map((data) => Order.fromMap(data)).toList();
+      }
+      return [];
+    } catch (e) {
+      print('getSellerOrders error: $e');
+      return [];
+    }
+  }
+
   Future<List<Product>> getProductsBySeller(String token) async {
     try {
       final response = await http.get(
@@ -67,7 +90,6 @@ class SellerRepository {
       }
 
       return [];
-
     } catch (e) {
       print('getProductsBySeller error: $e');
       return [];
@@ -82,7 +104,7 @@ class SellerRepository {
         Uri.parse('$_baseUrl/seller/product/add'),
       );
 
-      request.headers.addAll(_getAuthHeaders(token));
+      request.headers.addAll(_getAuthHeaders(token, isMultipart: true));
 
       request.fields['name'] = product.name ?? '';
       request.fields['price_per_kg'] = product.pricePerKg?.toString() ?? '0';
@@ -98,7 +120,11 @@ class SellerRepository {
       final response = await http.Response.fromStream(streamedResponse);
 
       dynamic responseBody = _handleResponse(response);
-      return Product.fromMap(responseBody['product'] ?? responseBody);
+      if (responseBody is Map && responseBody.containsKey('product')) {
+        return Product.fromMap(responseBody['product'] as Map<String, dynamic>);
+      }
+      throw Exception('Invalid response format after adding product');
+
     } catch (e) {
       print('addProduct error: $e');
       rethrow;
@@ -113,7 +139,10 @@ class SellerRepository {
         body: json.encode({'status': status}),
       );
       dynamic responseBody = _handleResponse(response);
-      return Order.fromMap(responseBody['order'] ?? responseBody);
+      if (responseBody is Map && responseBody.containsKey('order')) {
+        return Order.fromMap(responseBody['order'] as Map<String, dynamic>);
+      }
+      throw Exception('Invalid response format after updating order status');
     } catch (e) {
       print('updateSellerOrderStatus error: $e');
       rethrow;
@@ -128,7 +157,7 @@ class SellerRepository {
         Uri.parse('$_baseUrl/seller/product/$productId'),
       );
 
-      request.headers.addAll(_getAuthHeaders(token));
+      request.headers.addAll(_getAuthHeaders(token, isMultipart: true));
 
       request.fields['_method'] = 'PUT';
 
@@ -146,7 +175,10 @@ class SellerRepository {
       final response = await http.Response.fromStream(streamedResponse);
 
       dynamic responseBody = _handleResponse(response);
-      return Product.fromMap(responseBody['product'] ?? responseBody);
+      if (responseBody is Map && responseBody.containsKey('product')) {
+        return Product.fromMap(responseBody['product'] as Map<String, dynamic>);
+      }
+      throw Exception('Invalid response format after updating product');
     } catch (e) {
       print('updateProduct error: $e');
       rethrow;
