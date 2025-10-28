@@ -10,26 +10,31 @@ class SellerOrderDetailScreen extends ConsumerWidget {
   const SellerOrderDetailScreen({super.key, required this.order});
 
   void _updateStatus(WidgetRef ref, String newStatus) {
-      ref.read(sellerProvider.notifier).updateSellerOrderStatus(order.id!, newStatus);
+    ref
+        .read(sellerProvider.notifier)
+        .updateSellerOrderStatus(order.id!, newStatus);
     print('Updating order ${order.id} to $newStatus (Not yet implemented)');
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Order Detail #${order.id}'),
-      ),
+      appBar: AppBar(title: Text('Order Detail #${order.id}')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Status: ${order.status ?? 'N/A'}', style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Status: ${order.status ?? 'N/A'}',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
             const SizedBox(height: 10),
             Text('Customer: ${order.user?.name ?? 'Unknown'}'),
             Text('Delivery Address: ${order.deliveryAddress ?? 'N/A'}'),
-            Text('Total Amount: \$${order.totalAmount?.toStringAsFixed(2) ?? '0.00'}'),
+            Text(
+              'Total Amount: \$${order.totalAmount?.toStringAsFixed(2) ?? '0.00'}',
+            ),
             Text('Placed At: ${order.createdAt ?? 'Unknown'}'),
             const Divider(height: 30),
             Text('Products:', style: Theme.of(context).textTheme.titleLarge),
@@ -45,12 +50,17 @@ class SellerOrderDetailScreen extends ConsumerWidget {
                   return ListTile(
                     title: Text(item.product?.name ?? 'Unknown product'),
                     subtitle: Text('Quantity: ${item.quantity}'),
-                    trailing: Text('\$${item.priceAtPurchase?.toStringAsFixed(2) ?? '0.00'}'),
+                    trailing: Text(
+                      '\$${item.priceAtPurchase?.toStringAsFixed(2) ?? '0.00'}',
+                    ),
                   );
                 },
               ),
             const Divider(height: 30),
-            Text('Update Status:', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Update Status:',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             Wrap(
               spacing: 8.0,
               runSpacing: 4.0,
@@ -64,7 +74,7 @@ class SellerOrderDetailScreen extends ConsumerWidget {
                   child: const Text('Mark as Ready for Pickup'),
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),

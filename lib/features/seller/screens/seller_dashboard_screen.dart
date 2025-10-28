@@ -1,11 +1,10 @@
+import 'package:cnpm_ptpm/features/seller/screens/manage_products_screen.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
-import 'seller_orders_screen.dart';
-import 'manage_products_screen.dart';
-// Import the new product list widget
 import '../widgets/seller_product_list.dart';
+import 'seller_orders_screen.dart';
 
 class SellerDashboardScreen extends ConsumerStatefulWidget {
   static const routeName = '/seller-dashboard';

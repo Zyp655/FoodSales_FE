@@ -5,6 +5,7 @@ import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+
 // Import the new image picker widget
 import '../widgets/image_picker_widget.dart';
 
@@ -35,9 +36,11 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     super.initState();
     _nameController = TextEditingController(text: widget.product?.name ?? '');
     _priceController = TextEditingController(
-        text: widget.product?.pricePerKg?.toString() ?? '');
-    _descriptionController =
-        TextEditingController(text: widget.product?.description ?? '');
+      text: widget.product?.pricePerKg?.toString() ?? '',
+    );
+    _descriptionController = TextEditingController(
+      text: widget.product?.description ?? '',
+    );
     _selectedCategoryId = widget.product?.categoryId;
   }
 
@@ -52,7 +55,6 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
   void _handleImagePick(XFile? image) {
     _selectedImageFile = image;
   }
-
 
   Future<void> _saveProduct() async {
     if (!_formKey.currentState!.validate()) {
@@ -71,7 +73,10 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     final sellerNotifier = ref.read(sellerProvider.notifier);
     bool success = false;
     if (_isEditing) {
-      success = await sellerNotifier.updateProduct(newProduct, _selectedImageFile);
+      success = await sellerNotifier.updateProduct(
+        newProduct,
+        _selectedImageFile,
+      );
     } else {
       success = await sellerNotifier.addProduct(newProduct, _selectedImageFile);
     }
@@ -83,7 +88,9 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(sellerProvider.select((state) => state.isLoading));
+    final isLoading = ref.watch(
+      sellerProvider.select((state) => state.isLoading),
+    );
     final categoriesAsync = ref.watch(categoriesProvider);
 
     ref.listen(sellerProvider, (previous, next) {
@@ -95,9 +102,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     });
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isEditing ? 'Edit Product' : 'Add Product'),
-      ),
+      appBar: AppBar(title: Text(_isEditing ? 'Edit Product' : 'Add Product')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Form(
@@ -122,7 +127,9 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
               const SizedBox(height: 15),
               categoriesAsync.when(
                 data: (categories) {
-                  if (_selectedCategoryId == null && categories.isNotEmpty && !_isEditing) {
+                  if (_selectedCategoryId == null &&
+                      categories.isNotEmpty &&
+                      !_isEditing) {
                     _selectedCategoryId = categories.first.id;
                   }
                   return DropdownButtonFormField<int>(
@@ -140,7 +147,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                     },
                     decoration: const InputDecoration(labelText: 'Category'),
                     validator: (value) =>
-                    value == null ? 'Please select a category' : null,
+                        value == null ? 'Please select a category' : null,
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -150,12 +157,15 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
               TextFormField(
                 controller: _priceController,
                 decoration: const InputDecoration(labelText: 'Price per Kg'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 validator: (value) {
                   if (value == null ||
                       value.isEmpty ||
                       double.tryParse(value) == null ||
-                      double.parse(value) <= 0) { // Check if > 0
+                      double.parse(value) <= 0) {
+                    // Check if > 0
                     return 'Please enter a valid positive price';
                   }
                   return null;

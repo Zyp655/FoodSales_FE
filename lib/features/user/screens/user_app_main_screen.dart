@@ -22,13 +22,6 @@ class UserAppMainScreen extends ConsumerWidget {
           style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.search),
-            tooltip: 'Search',
-            onPressed: () {
-              Navigator.of(context).pushNamed(SearchScreen.routeName);
-            },
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: Consumer(
