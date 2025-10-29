@@ -3,6 +3,7 @@ import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
+import 'become_delivery_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   static const routeName = '/profile';
@@ -60,6 +61,25 @@ class ProfileScreen extends ConsumerWidget {
               Navigator.of(context).pushNamed(SettingsScreen.routeName);
             },
           ),
+          if (user.role == 'user')
+            Column(
+              children: [
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.motorcycle_outlined,
+                      color: Colors.blueAccent),
+                  title: const Text('Become a Delivery Driver'),
+                  subtitle:
+                  const Text('Register to start delivering orders'),
+                  trailing: const Icon(Icons.chevron_right,
+                      color: Colors.blueAccent),
+                  onTap: () {
+                    Navigator.of(context)
+                        .pushNamed(BecomeDeliveryScreen.routeName);
+                  },
+                ),
+              ],
+            ),
           const Divider(),
         ],
       ),

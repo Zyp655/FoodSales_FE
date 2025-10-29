@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
+import 'package:image_picker/image_picker.dart';
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/cart_item.dart';
 import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/transaction.dart';
 import 'package:cnpm_ptpm/models/category.dart';
-
-import '../models/cart_seller_group.dart';
+import 'package:cnpm_ptpm/models/cart_seller_group.dart';
 
 class SearchResult {
   final List<Product> products;
@@ -19,12 +18,15 @@ class SearchResult {
 class UserRepository {
   final String _baseUrl = 'http://10.0.2.2:8000/api';
 
-  Map<String, String> _getAuthHeaders(String token) {
-    return {
+  Map<String, String> _getAuthHeaders(String token, {bool isMultipart = false}) {
+    var headers = {
       'Authorization': 'Bearer $token',
       'Accept': 'application/json',
-      'Content-Type': 'application/json',
     };
+    if (!isMultipart) {
+      headers['Content-Type'] = 'application/json';
+    }
+    return headers;
   }
 
   dynamic _handleResponse(http.Response response) {
@@ -328,6 +330,60 @@ class UserRepository {
     } catch (e) {
       print('removeFromCart error: $e');
       return false;
+    }
+  }
+
+  Future<Order> getOrderDetails(String token, int orderId) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$_baseUrl/order/detail/$orderId'),
+        headers: _getAuthHeaders(token),
+      );
+      dynamic responseBody = _handleResponse(response);
+
+      if (responseBody is Map && responseBody.containsKey('order') && responseBody['order'] is Map) {
+        return Order.fromMap(responseBody['order'] as Map<String, dynamic>);
+      }
+      throw Exception('Invalid response format for order details');
+    } catch (e) {
+      print('getOrderDetails error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> submitDeliveryRequest({
+    required String token,
+    required String fullName,
+    required String email,
+    required String phone,
+    required String idCardNumber,
+    required XFile idCardImage,
+  }) async {
+    try {
+      var request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$_baseUrl/user/request-delivery'),
+      );
+
+      request.headers.addAll(_getAuthHeaders(token, isMultipart: true));
+
+      request.fields['full_name'] = fullName;
+      request.fields['email'] = email;
+      request.fields['phone'] = phone;
+      request.fields['id_card_number'] = idCardNumber;
+
+      request.files.add(
+        await http.MultipartFile.fromPath('id_card_image', idCardImage.path),
+      );
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      _handleResponse(response);
+
+    } catch (e) {
+      print('submitDeliveryRequest error: $e');
+      rethrow;
     }
   }
 

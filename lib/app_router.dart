@@ -9,6 +9,7 @@ import 'features/seller/screens/seller_analytics_screen.dart';
 import 'features/seller/screens/seller_change_password_screen.dart';
 import 'features/seller/screens/seller_profile_screen.dart';
 import 'features/seller/screens/seller_settings_screen.dart';
+import 'features/user/screens/become_delivery_screen.dart';
 import 'features/user/screens/my_order_screen.dart';
 import 'features/user/screens/user_home_screen.dart';
 import 'features/user/screens/cart_screen.dart';
@@ -78,6 +79,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const SellerChangePasswordScreen());
       case StoreInfoScreen.routeName:
         return MaterialPageRoute(builder: (_) => const StoreInfoScreen());
+      case BecomeDeliveryScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const BecomeDeliveryScreen());
       case SellerDetailScreen.routeName:
         final seller = settings.arguments;
         if (seller != null && seller is Seller) {

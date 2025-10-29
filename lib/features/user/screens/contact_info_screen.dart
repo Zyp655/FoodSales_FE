@@ -2,9 +2,11 @@ import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import '../../../providers/account_provider.dart';
 
 class ContactInfoScreen extends ConsumerStatefulWidget {
   static const routeName = '/contact-info';
+
   const ContactInfoScreen({super.key});
 
   @override
@@ -23,7 +25,9 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
     super.initState();
     final currentUser = ref.read(authProvider).currentUser;
     _phoneController = TextEditingController(text: currentUser?.phone ?? '');
-    _addressController = TextEditingController(text: currentUser?.address ?? '');
+    _addressController = TextEditingController(
+      text: currentUser?.address ?? '',
+    );
   }
 
   @override
@@ -34,9 +38,6 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
   }
 
   Future<void> _saveContactInfo() async {
-    // Optional validation check
-    // if (!_contactFormKey.currentState!.validate()) return;
-
     setState(() => _isSavingContact = true);
     final newPhone = _phoneController.text.trim();
     final newAddress = _addressController.text.trim();
@@ -50,18 +51,30 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
     bool success = true;
 
     if (phoneChanged || addressChanged) {
-      success = await ref.read(authProvider.notifier).updateContactInfo(
-          phone: phoneChanged ? (newPhone.isNotEmpty ? newPhone : null) : null,
-          address: addressChanged ? (newAddress.isNotEmpty ? newAddress : null) : null);
+      success = await ref
+          .read(accountProvider.notifier)
+          .updateContactInfo(
+            phone: phoneChanged
+                ? (newPhone.isNotEmpty ? newPhone : null)
+                : null,
+            address: addressChanged
+                ? (newAddress.isNotEmpty ? newAddress : null)
+                : null,
+          );
     }
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(success
-            ? 'Contact info updated!'
-            : ref.read(authProvider).error ?? 'Failed to update contact info.'),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Contact info updated!'
+                : ref.read(accountProvider).error ??
+                      'Failed to update contact info.',
+          ),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
       if (success) {
         setState(() => _isEditingContact = false);
       }
@@ -81,12 +94,15 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(authProvider).currentUser;
+    final accountState = ref.watch(accountProvider);
 
     if (user == null) {
-      return Scaffold(appBar: AppBar(), body: const Center(child: Text('User not found')));
+      return Scaffold(
+        appBar: AppBar(),
+        body: const Center(child: Text('User not found')),
+      );
     }
 
-    // Update controllers if user data changes externally
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && !_isEditingContact) {
         if (_phoneController.text != (user.phone ?? '')) {
@@ -102,24 +118,36 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
       appBar: AppBar(
         title: const Text('Contact Information'),
         actions: [
-          // Edit/Save/Cancel buttons moved to the body
           if (_isEditingContact && !_isSavingContact)
-            TextButton(onPressed: _cancelEditContact, child: const Text('Cancel')),
+            TextButton(
+              onPressed: _cancelEditContact,
+              child: const Text(
+                'Cancel',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 8.0),
             child: _isEditingContact
                 ? IconButton(
-              icon: _isSavingContact
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Icon(Icons.check),
-              tooltip: 'Save',
-              onPressed: _isSavingContact ? null : _saveContactInfo,
-            )
+                    icon: accountState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.check),
+                    tooltip: 'Save',
+                    onPressed: accountState.isLoading ? null : _saveContactInfo,
+                  )
                 : IconButton(
-              icon: const Icon(Icons.edit),
-              tooltip: 'Edit',
-              onPressed: () => setState(() => _isEditingContact = true),
-            ),
+                    icon: const Icon(Icons.edit),
+                    tooltip: 'Edit',
+                    onPressed: () => setState(() => _isEditingContact = true),
+                  ),
           ),
         ],
       ),
@@ -146,11 +174,18 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
               title: const Text('Address'),
               subtitle: _isEditingContact
                   ? TextFormField(
-                controller: _addressController,
-                decoration: const InputDecoration(hintText: 'Enter address', isDense: true),
-                maxLines: null,
-              )
-                  : Text(user.address != null && user.address!.isNotEmpty ? user.address! : 'Not set'),
+                      controller: _addressController,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter address',
+                        isDense: true,
+                      ),
+                      maxLines: null,
+                    )
+                  : Text(
+                      user.address != null && user.address!.isNotEmpty
+                          ? user.address!
+                          : 'Not set',
+                    ),
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,
@@ -158,19 +193,29 @@ class _ContactInfoScreenState extends ConsumerState<ContactInfoScreen> {
               title: const Text('Phone Number'),
               subtitle: _isEditingContact
                   ? TextFormField(
-                controller: _phoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(hintText: 'Enter 10 digits', isDense: true, counterText: ""),
-                maxLength: 10,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                validator: (value) {
-                  if (value != null && value.isNotEmpty && value.length != 10) {
-                    return 'Must be 10 digits';
-                  }
-                  return null;
-                },
-              )
-                  : Text(user.phone != null && user.phone!.isNotEmpty ? user.phone! : 'Not set'),
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: const InputDecoration(
+                        hintText: 'Enter 10 digits',
+                        isDense: true,
+                        counterText: "",
+                      ),
+                      maxLength: 10,
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                      validator: (value) {
+                        if (value != null &&
+                            value.isNotEmpty &&
+                            value.length != 10) {
+                          return 'Must be 10 digits';
+                        }
+                        return null;
+                      },
+                    )
+                  : Text(
+                      user.phone != null && user.phone!.isNotEmpty
+                          ? user.phone!
+                          : 'Not set',
+                    ),
             ),
           ],
         ),

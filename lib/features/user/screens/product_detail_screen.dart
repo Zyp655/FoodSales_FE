@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/product.dart';
-
-import '../../../providers/user_provider.dart';
+import '../../../providers/cart_provider.dart';
 
 class ProductDetailScreen extends ConsumerStatefulWidget {
   static const routeName = '/product-detail';

@@ -1,3 +1,4 @@
+import 'package:cnpm_ptpm/providers/account_provider.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -59,7 +60,7 @@ class _StoreInfoScreenState extends ConsumerState<StoreInfoScreen> {
     final newName = _nameController.text.trim();
     final newDescription = _descriptionController.text.trim();
 
-    final success = await ref.read(authProvider.notifier).updateSellerInfo(
+    final success = await ref.read(accountProvider.notifier).updateSellerInfo(
       name: newName,
       email: newEmail,
       phone: newPhone.isNotEmpty ? newPhone : null,

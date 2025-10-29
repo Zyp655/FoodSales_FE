@@ -2,11 +2,15 @@ import 'package:cnpm_ptpm/features/user/screens/cart_screen.dart';
 import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../providers/cart_provider.dart';
 import '../widgets/banner_section.dart';
 import '../widgets/seller_section.dart';
 import 'search_screen.dart';
+
+final searchQueryProvider = StateProvider<String>((ref) => '');
 
 class UserAppMainScreen extends ConsumerWidget {
   const UserAppMainScreen({super.key});
@@ -14,6 +18,18 @@ class UserAppMainScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sellersAsync = ref.watch(sellersProvider);
+    final searchQuery = ref.watch(searchQueryProvider);
+
+    final filteredSellers = sellersAsync.when(
+      data: (sellers) => sellers.where((seller) {
+        return seller.name
+            ?.toLowerCase()
+            .contains(searchQuery.toLowerCase()) ??
+            false;
+      }).toList(),
+      loading: () => [],
+      error: (e, s) => [],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -86,11 +102,19 @@ class UserAppMainScreen extends ConsumerWidget {
                     return const Center(
                         child: Text('No sellers available right now.'));
                   }
+
+                  final sellersToShow = searchQuery.isEmpty ? sellers : filteredSellers;
+
+                  if (sellersToShow.isEmpty) {
+                    return const Center(
+                        child: Text('No sellers found matching your search.'));
+                  }
+
                   return ListView.builder(
                     padding: const EdgeInsets.only(top: 10),
-                    itemCount: sellers.length,
+                    itemCount: sellersToShow.length,
                     itemBuilder: (context, index) {
-                      final seller = sellers[index];
+                      final seller = sellersToShow[index];
                       return SellerSection(seller: seller);
                     },
                   );

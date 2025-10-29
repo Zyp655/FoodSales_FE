@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/repositories/auth_repository.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:image_picker/image_picker.dart';
 
 @immutable
 class AuthState {
@@ -33,7 +32,6 @@ class AuthState {
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _authRepo;
-
   AuthNotifier(this._authRepo) : super(const AuthState());
 
   String? get token => state.currentUser?.token;
@@ -73,107 +71,12 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  Future<bool> updateAddress(String newAddress) async {
-    final currentToken = token;
-    if (currentToken == null || state.currentUser == null) {
-      state = state.copyWith(error: 'User not logged in.', clearError: false);
-      return false;
-    }
-    try {
-      final updatedUser = await _authRepo.updateUserAddress(currentToken, newAddress);
-      state = state.copyWith(
-        currentUser: updatedUser.copyWith(token: currentToken),
-        isLoading: false,
-        error: null,
-        clearError: true,
-      );
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
-    }
-  }
-
-  Future<bool> updateContactInfo({String? phone, String? address}) async {
-    final currentToken = token;
-    if (currentToken == null || state.currentUser == null) {
-      state = state.copyWith(error: 'User not logged in.', clearError: false);
-      return false;
-    }
-    try {
-      final updatedUser = await _authRepo.updateContact(currentToken, phone: phone, address: address);
-      state = state.copyWith(
-        currentUser: updatedUser.copyWith(token: currentToken),
-        isLoading: false,
-        error: null,
-        clearError: true,
-      );
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
-    }
-  }
-
-  Future<bool> changePassword(String currentPassword, String newPassword, String confirmPassword) async {
-    final currentToken = token;
-    if (currentToken == null) {
-      state = state.copyWith(error: 'User not logged in.', clearError: false);
-      return false;
-    }
-    state = state.copyWith(isLoading: true, clearError: true);
-    try {
-      await _authRepo.changePassword(currentToken, currentPassword, newPassword, confirmPassword);
-      state = state.copyWith(isLoading: false, error: null);
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
-    }
-  }
-
   Future<bool> registerSeller(Map<String, dynamic> sellerData) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _authRepo.registerSeller(sellerData);
       final user = await _authRepo.login(sellerData['email'], sellerData['password']);
       state = state.copyWith(isLoading: false, currentUser: user);
-      return true;
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-      return false;
-    }
-  }
-
-  Future<bool> updateSellerInfo({
-    required String name,
-    required String email,
-    required String? phone,
-    required String address,
-    required String description,
-    XFile? imageFile,
-  }) async {
-    final currentToken = token;
-    if (currentToken == null || state.currentUser == null) {
-      state = state.copyWith(error: 'Seller not logged in.', clearError: false);
-      return false;
-    }
-    try {
-      final updatedUser = await _authRepo.updateSellerInfo(
-        currentToken,
-        name: name,
-        email: email,
-        phone: phone,
-        address: address,
-        description: description,
-        imageFile: imageFile,
-      );
-      state = state.copyWith(
-        currentUser: updatedUser.copyWith(token: currentToken),
-        isLoading: false,
-        error: null,
-        clearError: true,
-      );
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

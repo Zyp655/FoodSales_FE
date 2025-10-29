@@ -1,7 +1,8 @@
 import 'package:cnpm_ptpm/features/user/screens/order_detail_screen.dart';
-import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../providers/order_provider.dart';
 
 class MyOrdersScreen extends ConsumerWidget {
   static const routeName = '/my-orders';
@@ -13,11 +14,7 @@ class MyOrdersScreen extends ConsumerWidget {
     final ordersAsync = ref.watch(userOrdersProvider);
 
     return Scaffold(
-      appBar: AppBar(
-          title: const Text(
-              'My Orders'
-          ),
-      ),
+      appBar: AppBar(title: const Text('My Orders')),
       body: ordersAsync.when(
         data: (orders) {
           if (orders.isEmpty) {
@@ -30,9 +27,14 @@ class MyOrdersScreen extends ConsumerWidget {
               itemBuilder: (ctx, index) {
                 final order = orders[index];
                 return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   elevation: 2,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                   child: ListTile(
                     title: Text(
                       'Order #${order.id} - ${order.status ?? 'N/A'}',
@@ -42,7 +44,10 @@ class MyOrdersScreen extends ConsumerWidget {
                       'Total: ${order.totalAmount?.toStringAsFixed(2) ?? '0'}đ\nPlaced on: ${order.createdAt ?? 'Unknown'}',
                     ),
                     isThreeLine: true,
-                    trailing: const Icon(Icons.chevron_right, color: Colors.blueAccent),
+                    trailing: const Icon(
+                      Icons.chevron_right,
+                      color: Colors.blueAccent,
+                    ),
                     onTap: () {
                       if (order.id != null) {
                         Navigator.of(context).push(

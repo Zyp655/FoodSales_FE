@@ -1,8 +1,11 @@
+import 'package:cnpm_ptpm/features/user/screens/contact_info_screen.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/cart_item.dart';
+import '../../../providers/cart_provider.dart';
+import '../../../providers/order_provider.dart';
 import 'product_detail_screen.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
@@ -31,17 +34,39 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final token = ref.read(authProvider).currentUser?.token;
     final user = ref.read(authProvider).currentUser;
 
-    if (token == null ||
-        user == null ||
-        user.address == null ||
-        user.address!.isEmpty) {
+    if (token == null || user == null) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Please log in and ensure your address is set.'),
+            content: Text('Please log in to continue.'),
             backgroundColor: Colors.red,
           ),
         );
+      }
+      return;
+    }
+
+    if (user.address == null || user.address!.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please set your delivery address in your profile.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    if (user.phone == null || user.phone!.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please update your phone number to place an order.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        Navigator.of(context).pushNamed(ContactInfoScreen.routeName);
       }
       return;
     }
@@ -56,8 +81,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
       if (mounted) {
         await ref.read(cartProvider.notifier).fetchCart();
-
-        ref.refresh(userOrdersProvider);
+        ref.invalidate(userOrdersProvider);
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Order created successfully!')),
@@ -208,7 +232,6 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                             );
                           },
                         ),
-
                         const Divider(height: 1, thickness: 1),
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -266,14 +289,20 @@ class _CartScreenState extends ConsumerState<CartScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Grand Total:',
-                    style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
-                Text('${grandTotal.toStringAsFixed(0)}đ',
-                    style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
+                const Text(
+                  'Grand Total:',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  '${grandTotal.toStringAsFixed(0)}đ',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),

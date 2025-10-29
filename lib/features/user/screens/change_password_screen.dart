@@ -1,3 +1,4 @@
+import 'package:cnpm_ptpm/providers/account_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
@@ -34,7 +35,7 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
     final confirmPassword = _confirmPasswordController.text;
 
     final bool success = await ref
-        .read(authProvider.notifier)
+        .read(accountProvider.notifier)
         .changePassword(currentPassword, newPassword, confirmPassword);
 
     if (mounted) {
