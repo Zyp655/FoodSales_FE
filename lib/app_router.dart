@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'features/auth/screens/splash_screen.dart'; // <<< Import SplashScreen
 import 'features/auth/screens/login_screen.dart';
 import 'features/auth/screens/signup_screen.dart';
+import 'features/delivery/screens/available_orders_screen.dart';
 import 'features/seller/screens/seller_analytics_screen.dart';
 import 'features/seller/screens/seller_change_password_screen.dart';
 import 'features/seller/screens/seller_profile_screen.dart';
@@ -112,7 +113,8 @@ class AppRouter {
           return MaterialPageRoute(builder: (_) => DeliveryOrderDetailScreen(order: order));
         }
         return _errorRoute('Missing order argument for DeliveryOrderDetailScreen');
-
+      case AvailableOrdersScreen.routeName:
+        return MaterialPageRoute(builder: (_) => const AvailableOrdersScreen());
       default:
         return _errorRoute('Route not found: ${settings.name}');
     }

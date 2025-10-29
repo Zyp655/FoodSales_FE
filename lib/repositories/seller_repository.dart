@@ -30,16 +30,17 @@ class SellerRepository {
         }
         return decoded;
       } catch (e) {
-        print('API Error: Failed to decode JSON response - ${response.body}');
         throw Exception('Invalid JSON response from server.');
       }
     } else {
-      print('API Error: ${response.statusCode} - ${response.body}');
       String errorMessage = 'API error: ${response.statusCode}';
       try {
         var decodedError = json.decode(response.body);
         if (decodedError is Map && decodedError.containsKey('message')) {
           errorMessage = decodedError['message'];
+          if (decodedError.containsKey('errors')) {
+            errorMessage += ' ${decodedError['errors'].toString()}';
+          }
         } else {
           errorMessage = response.body;
         }
@@ -64,7 +65,6 @@ class SellerRepository {
       }
       return [];
     } catch (e) {
-      print('getSellerOrders error: $e');
       return [];
     }
   }
@@ -76,8 +76,6 @@ class SellerRepository {
         headers: _getAuthHeaders(token),
       );
       dynamic responseBody = _handleResponse(response);
-
-      print('DEBUG: Raw responseBody from /seller/product/: $responseBody');
 
       if (responseBody is Map && responseBody.containsKey('data')) {
         if (responseBody['data'] is List) {
@@ -91,7 +89,6 @@ class SellerRepository {
 
       return [];
     } catch (e) {
-      print('getProductsBySeller error: $e');
       return [];
     }
   }
@@ -124,9 +121,7 @@ class SellerRepository {
         return Product.fromMap(responseBody['product'] as Map<String, dynamic>);
       }
       throw Exception('Invalid response format after adding product');
-
     } catch (e) {
-      print('addProduct error: $e');
       rethrow;
     }
   }
@@ -144,7 +139,6 @@ class SellerRepository {
       }
       throw Exception('Invalid response format after updating order status');
     } catch (e) {
-      print('updateSellerOrderStatus error: $e');
       rethrow;
     }
   }
@@ -180,7 +174,6 @@ class SellerRepository {
       }
       throw Exception('Invalid response format after updating product');
     } catch (e) {
-      print('updateProduct error: $e');
       rethrow;
     }
   }
@@ -193,7 +186,6 @@ class SellerRepository {
       );
       _handleResponse(response);
     } catch (e) {
-      print('deleteProduct error: $e');
       rethrow;
     }
   }

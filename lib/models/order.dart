@@ -4,6 +4,16 @@ import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 
 class Order {
+  static const String STATUS_PENDING = 'Pending';
+  static const String STATUS_PROCESSING = 'Processing';
+  static const String STATUS_READY_FOR_PICKUP = 'ReadyForPickup';
+  static const String STATUS_PICKING_UP = 'Picking Up';
+  static const String STATUS_IN_TRANSIT = 'In Transit';
+  static const String STATUS_DELIVERED = 'Delivered';
+  static const String STATUS_CANCELLED = 'Cancelled';
+  static const String API_STATUS_PROCESSING = 'processing';
+  static const String API_STATUS_READY_FOR_PICKUP = 'ready_for_pickup';
+
   int? id;
   int? userId;
   int? sellerId;
@@ -33,7 +43,6 @@ class Order {
   });
 
   factory Order.fromMap(Map<String, dynamic> map) {
-    // Logic chuyển đổi an toàn cho totalAmount
     double? safeTotalAmount;
     var totalAmountValue = map['total_amount'];
     if (totalAmountValue != null) {
@@ -59,13 +68,13 @@ class Order {
           : null,
       user: map['user'] != null ? User.fromMap(map['user']) : null,
       seller: map['seller'] != null ? Seller.fromMap(map['seller']) : null,
+      deliveryPerson: map['delivery_person'] != null ? User.fromMap(map['delivery_person']) : null, // Thêm deliveryPerson
     );
   }
 
   Map<String, dynamic> toMapForCreate() {
     return {
       'delivery_address': deliveryAddress,
-
     };
   }
 
