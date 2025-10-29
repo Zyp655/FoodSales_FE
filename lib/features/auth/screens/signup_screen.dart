@@ -22,6 +22,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _addressController = TextEditingController();
+  final _descriptionController = TextEditingController();
   UserRole _selectedRole = UserRole.user;
 
   @override
@@ -30,6 +31,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _addressController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -44,6 +46,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
     if (_selectedRole == UserRole.user) {
       ref.read(authProvider.notifier).registerUser(data);
     } else {
+      data["description"] = _descriptionController.text.trim();
       ref.read(authProvider.notifier).registerSeller(data);
     }
   }
@@ -140,6 +143,17 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 controller: _addressController,
                 decoration: const InputDecoration(labelText: 'Address'),
               ),
+
+              if (_selectedRole == UserRole.seller)
+                Padding(
+                  padding: const EdgeInsets.only(top: 15.0),
+                  child: TextField(
+                    controller: _descriptionController,
+                    decoration: const InputDecoration(labelText: 'Store Description'),
+                    maxLines: 2,
+                  ),
+                ),
+
               const SizedBox(height: 30),
               ElevatedButton(
                 onPressed: authState.isLoading ? null : _register,
