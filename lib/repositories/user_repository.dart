@@ -8,65 +8,20 @@ import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/transaction.dart';
 import 'package:cnpm_ptpm/models/category.dart';
 import 'package:cnpm_ptpm/models/cart_seller_group.dart';
+import 'base_repository.dart';
 
 class SearchResult {
   final List<Product> products;
   final List<Seller> sellers;
   SearchResult({required this.products, required this.sellers});
 }
+class UserRepository extends BaseRepository {
 
-class UserRepository {
-  final String _baseUrl = 'http://10.0.2.2:8000/api';
-
-  Map<String, String> _getAuthHeaders(String token, {bool isMultipart = false}) {
-    var headers = {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-    };
-    if (!isMultipart) {
-      headers['Content-Type'] = 'application/json';
-    }
-    return headers;
-  }
-
-  dynamic _handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) {
-        return null;
-      }
-      try {
-        final decoded = json.decode(response.body);
-        if (decoded is Map) {
-          return decoded.cast<String, dynamic>();
-        } else if (decoded is List) {
-          return decoded;
-        }
-        return decoded;
-      } catch (e) {
-        print('API Error: Failed to decode JSON response - ${response.body}');
-        throw Exception('Invalid JSON response from server.');
-      }
-    } else {
-      print('API Error: ${response.statusCode} - ${response.body}');
-      String errorMessage = 'API error: ${response.statusCode}';
-      try {
-        var decodedError = json.decode(response.body);
-        if (decodedError is Map && decodedError.containsKey('message')) {
-          errorMessage = decodedError['message'];
-        } else {
-          errorMessage = response.body;
-        }
-      } catch (_) {
-        errorMessage = response.body;
-      }
-      throw Exception(errorMessage);
-    }
-  }
 
   Future<List<Category>> getCategories() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/gen/categories'));
-      dynamic responseBody = _handleResponse(response);
+      final response = await http.get(Uri.parse('$baseUrl/gen/categories'));
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map && responseBody.containsKey('categories') && responseBody['categories'] is List) {
         List<dynamic> categoryList = responseBody['categories'];
         return categoryList.map((data) => Category.fromMap(data)).toList();
@@ -80,8 +35,8 @@ class UserRepository {
 
   Future<List<Seller>> getSellers() async {
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/gen/sellers'));
-      dynamic responseBody = _handleResponse(response);
+      final response = await http.get(Uri.parse('$baseUrl/gen/sellers'));
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map && responseBody.containsKey('sellers') && responseBody['sellers'] is List) {
         List<dynamic> sellersList = responseBody['sellers'];
         return sellersList.map((data) => Seller.fromMap(data)).toList();
@@ -104,11 +59,11 @@ class UserRepository {
       }
 
       final uri = Uri.parse(
-        '$_baseUrl/gen/products/search',
+        '$baseUrl/gen/products/search',
       ).replace(queryParameters: queryParams.isEmpty ? null : queryParams);
 
       final response = await http.get(uri);
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map && responseBody.containsKey('products') && responseBody['products'] is List) {
         List<dynamic> productsList = responseBody['products'];
         return productsList.map((data) => Product.fromMap(data)).toList();
@@ -123,9 +78,9 @@ class UserRepository {
   Future<Product> getSingleProduct(int productId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/product/$productId'),
+        Uri.parse('$baseUrl/product/$productId'),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map && responseBody.containsKey('data') && responseBody['data'] is Map) {
         return Product.fromMap(responseBody['data'] as Map<String, dynamic>);
       } else if (responseBody is Map<String, dynamic>) {
@@ -141,10 +96,10 @@ class UserRepository {
   Future<List<CartSellerGroup>> getCart(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/cart/'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/cart/'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
 
       print('DEBUG: Raw responseBody from /cart/: $responseBody');
 
@@ -176,11 +131,11 @@ class UserRepository {
   Future<CartItem> addToCart(String token, int productId, int quantity) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/cart/add'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/cart/add'),
+        headers: getAuthHeaders(token),
         body: json.encode({'product_id': productId, 'quantity': quantity}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map<String, dynamic>) {
         return CartItem.fromMap(responseBody['cart_item'] ?? responseBody);
       }
@@ -198,11 +153,11 @@ class UserRepository {
       ) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/cart/update/$cartItemId'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/cart/update/$cartItemId'),
+        headers: getAuthHeaders(token),
         body: json.encode({'quantity': quantity}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map<String, dynamic>) {
         return CartItem.fromMap(responseBody['cart_item'] ?? responseBody);
       }
@@ -221,15 +176,15 @@ class UserRepository {
       ) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/order/create'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/order/create'),
+        headers: getAuthHeaders(token),
         body: json.encode({
           'delivery_address': deliveryAddress,
           'seller_id': sellerId,
           'total_amount': totalAmount,
         }),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map<String, dynamic>) {
         final orderData = responseBody['order'] ?? responseBody;
         if (orderData is Map<String, dynamic>) {
@@ -246,10 +201,10 @@ class UserRepository {
   Future<List<Order>> getOrdersByUser(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/order/user'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/order/user'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map && responseBody.containsKey('orders') && responseBody['orders'] is List) {
         List<dynamic> orderList = responseBody['orders'];
         return orderList.map((data) => Order.fromMap(data)).toList();
@@ -268,11 +223,11 @@ class UserRepository {
       ) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/order/$orderId/status'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/order/$orderId/status'),
+        headers: getAuthHeaders(token),
         body: json.encode({'status': status}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map<String, dynamic>) {
         final orderData = responseBody['order'] ?? responseBody;
         if (orderData is Map<String, dynamic>) {
@@ -291,9 +246,9 @@ class UserRepository {
       return SearchResult(products: [], sellers: []);
     }
     try {
-      final uri = Uri.parse('$_baseUrl/gen/search').replace(queryParameters: {'q': query});
+      final uri = Uri.parse('$baseUrl/gen/search').replace(queryParameters: {'q': query});
       final response = await http.get(uri);
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
 
       List<Product> products = [];
       List<Seller> sellers = [];
@@ -322,10 +277,10 @@ class UserRepository {
   Future<bool> removeFromCart(String token, int cartItemId) async {
     try {
       final response = await http.delete(
-        Uri.parse('$_baseUrl/cart/remove/$cartItemId'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/cart/remove/$cartItemId'),
+        headers: getAuthHeaders(token),
       );
-      _handleResponse(response);
+      handleResponse(response);
       return true;
     } catch (e) {
       print('removeFromCart error: $e');
@@ -336,10 +291,10 @@ class UserRepository {
   Future<Order> getOrderDetails(String token, int orderId) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/order/detail/$orderId'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/order/detail/$orderId'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
 
       if (responseBody is Map && responseBody.containsKey('order') && responseBody['order'] is Map) {
         return Order.fromMap(responseBody['order'] as Map<String, dynamic>);
@@ -362,10 +317,10 @@ class UserRepository {
     try {
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$_baseUrl/user/request-delivery'),
+        Uri.parse('$baseUrl/user/request-delivery'),
       );
 
-      request.headers.addAll(_getAuthHeaders(token, isMultipart: true));
+      request.headers.addAll(getAuthHeaders(token, isMultipart: true));
 
       request.fields['full_name'] = fullName;
       request.fields['email'] = email;
@@ -379,7 +334,7 @@ class UserRepository {
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
 
-      _handleResponse(response);
+      handleResponse(response);
 
     } catch (e) {
       print('submitDeliveryRequest error: $e');
@@ -387,14 +342,32 @@ class UserRepository {
     }
   }
 
+  Future<String?> getDeliveryTicketStatus(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/delivery/ticket/status'),
+        headers: getAuthHeaders(token),
+      );
+      dynamic responseBody = handleResponse(response);
+
+      if (responseBody is Map && responseBody.containsKey('status')) {
+        return responseBody['status'] as String?;
+      }
+      return null;
+    } catch (e) {
+      print('getDeliveryTicketStatus error: $e');
+      rethrow;
+    }
+  }
+
   Future<Transaction> generateQrTransaction(String token, int orderId) async {
     try {
       final response = await http.post(
-        Uri.parse('$_baseUrl/transaction/generate-qr'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/transaction/generate-qr'),
+        headers: getAuthHeaders(token),
         body: json.encode({'order_id': orderId}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map<String, dynamic>) {
         final txData = responseBody['transaction'] ?? responseBody;
         if (txData is Map<String, dynamic>) {
@@ -415,11 +388,11 @@ class UserRepository {
       ) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/transaction/$transactionId/status'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/transaction/$transactionId/status'),
+        headers: getAuthHeaders(token),
         body: json.encode({'status': status}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       if (responseBody is Map<String, dynamic>) {
         final txData = responseBody['transaction'] ?? responseBody;
         if (txData is Map<String, dynamic>) {

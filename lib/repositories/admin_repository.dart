@@ -3,62 +3,23 @@ import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/models/order.dart';
+import '../models/delivery_ticket.dart';
 import '../models/seller.dart';
+import 'base_repository.dart';
 
-class AdminRepository {
-  final String _baseUrl = 'http://10.0.2.2:8000/api';
-
-  Map<String, String> _getAuthHeaders(String token) {
-    return {
-      'Authorization': 'Bearer $token',
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    };
-  }
-
-  dynamic _handleResponse(http.Response response) {
-    if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) return null;
-      try {
-        final decoded = json.decode(response.body);
-        if (decoded is Map) {
-          return decoded.cast<String, dynamic>();
-        } else if (decoded is List) {
-          return decoded;
-        }
-        return decoded;
-      } catch (e) {
-        print('API Error: Failed to decode JSON response - ${response.body}');
-        throw Exception('Invalid JSON response from server.');
-      }
-    } else {
-      print('API Error: ${response.statusCode} - ${response.body}');
-      String errorMessage = 'API error: ${response.statusCode}';
-      try {
-        var decodedError = json.decode(response.body);
-        if (decodedError is Map && decodedError.containsKey('message')) {
-          errorMessage = decodedError['message'];
-        } else {
-          errorMessage = response.body;
-        }
-      } catch (_) {
-        errorMessage = response.body;
-      }
-      throw Exception(errorMessage);
-    }
-  }
-
+class AdminRepository extends BaseRepository {
   Future<List<Order>> adminGetAllOrders(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/admin/orders'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/orders'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
 
       List<dynamic> orderList = [];
       if (responseBody is Map && responseBody.containsKey('orders')) {
-        if (responseBody['orders'] is Map && responseBody['orders'].containsKey('data')) {
+        if (responseBody['orders'] is Map &&
+            responseBody['orders'].containsKey('data')) {
           orderList = responseBody['orders']['data'];
         } else if (responseBody['orders'] is List) {
           orderList = responseBody['orders'];
@@ -71,37 +32,97 @@ class AdminRepository {
     }
   }
 
-
   Future<List<Seller>> adminListAllSellers(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/admin/sellers'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/sellers'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
-      // Assuming paginated response: { "data": [...] }
-      if (responseBody is Map && responseBody.containsKey('data') && responseBody['data'] is List) {
-        List<dynamic> sellerList = responseBody['data'];
-        return sellerList.map((data) => Seller.fromMap(data)).toList();
+      dynamic responseBody = handleResponse(response);
+
+      List<dynamic> sellerList = [];
+      if (responseBody is Map && responseBody.containsKey('data')) {
+        if (responseBody['data'] is Map &&
+            responseBody['data'].containsKey('data')) {
+          sellerList = responseBody['data']['data'];
+        } else if (responseBody['data'] is List) {
+          sellerList = responseBody['data'];
+        }
       } else if (responseBody is List) {
-        return responseBody.map((data) => Seller.fromMap(data)).toList();
+        sellerList = responseBody;
       }
-      return [];
+
+      return sellerList.map((data) => Seller.fromMap(data)).toList();
     } catch (e) {
       print('adminListAllSellers error: $e');
       rethrow;
     }
   }
 
-  Future<Seller> adminUpdateSellerStatus(
-      String token, int sellerId, String status) async {
+  Future<List<DeliveryTicket>> adminGetAllDeliveryTickets(
+      String token, {
+        String status = 'pending',
+      }) async {
+    try {
+      final uri = Uri.parse(
+        '$baseUrl/admin/delivery-tickets',
+      ).replace(queryParameters: {'status': status});
+      final response = await http.get(uri, headers: getAuthHeaders(token));
+      dynamic responseBody = handleResponse(response);
+
+      if (responseBody is Map &&
+          responseBody.containsKey('tickets') &&
+          responseBody['tickets'] is Map &&
+          responseBody['tickets'].containsKey('data')) {
+        List<dynamic> ticketList = responseBody['tickets']['data'];
+        return ticketList.map((data) => DeliveryTicket.fromMap(data)).toList();
+      } else if (responseBody is Map &&
+          responseBody.containsKey('tickets') &&
+          responseBody['tickets'] is List) {
+        List<dynamic> ticketList = responseBody['tickets'];
+        return ticketList.map((data) => DeliveryTicket.fromMap(data)).toList();
+      }
+      return [];
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<DeliveryTicket> adminUpdateDeliveryTicketStatus(
+      String token, int ticketId, String newStatus) async {
+    if (newStatus != 'approved' && newStatus != 'rejected') {
+      throw Exception('Invalid status. Must be "approved" or "rejected".');
+    }
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/admin/sellers/$sellerId/status'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/delivery-tickets/$ticketId/status'),
+        headers: getAuthHeaders(token),
+        body: json.encode({'status': newStatus}),
+      );
+      dynamic responseBody = handleResponse(response);
+
+      if (responseBody is Map && responseBody.containsKey('ticket')) {
+        return DeliveryTicket.fromMap(
+            responseBody['ticket'] as Map<String, dynamic>);
+      }
+      throw Exception('Invalid response format after updating ticket status');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<Seller> adminUpdateSellerStatus(
+      String token,
+      int sellerId,
+      String status,
+      ) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/sellers/$sellerId/status'),
+        headers: getAuthHeaders(token),
         body: json.encode({'status': status}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       return Seller.fromMap(responseBody['seller'] ?? responseBody);
     } catch (e) {
       print('adminUpdateSellerStatus error: $e');
@@ -112,31 +133,42 @@ class AdminRepository {
   Future<List<User>> adminListAllUsers(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/admin/users'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/users'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
-      if (responseBody is Map && responseBody.containsKey('data') && responseBody['data'] is List) {
-        List<dynamic> userList = responseBody['data'];
-        return userList.map((data) => User.fromMap(data)).toList();
+      dynamic responseBody = handleResponse(response);
+
+      List<dynamic> userList = [];
+      if (responseBody is Map && responseBody.containsKey('data')) {
+        if (responseBody['data'] is Map &&
+            responseBody['data'].containsKey('data')) {
+          userList = responseBody['data']['data'];
+        } else if (responseBody['data'] is List) {
+          userList = responseBody['data'];
+        }
       } else if (responseBody is List) {
-        return responseBody.map((data) => User.fromMap(data)).toList();
+        userList = responseBody;
       }
-      return [];
+
+      return userList.map((data) => User.fromMap(data)).toList();
     } catch (e) {
       print('adminListAllUsers error: $e');
       rethrow;
     }
   }
 
-  Future<User> adminUpdateUserRole(String token, int userId, String role) async {
+  Future<User> adminUpdateUserRole(
+      String token,
+      int userId,
+      String role,
+      ) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/admin/users/$userId/role'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/users/$userId/role'),
+        headers: getAuthHeaders(token),
         body: json.encode({'role': role}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       return User.fromMap(responseBody['user'] ?? responseBody);
     } catch (e) {
       print('adminUpdateUserRole error: $e');
@@ -147,11 +179,13 @@ class AdminRepository {
   Future<List<Product>> adminListAllProducts(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('$_baseUrl/admin/products'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/products'),
+        headers: getAuthHeaders(token),
       );
-      dynamic responseBody = _handleResponse(response);
-      if (responseBody is Map && responseBody.containsKey('data') && responseBody['data'] is List) {
+      dynamic responseBody = handleResponse(response);
+      if (responseBody is Map &&
+          responseBody.containsKey('data') &&
+          responseBody['data'] is List) {
         List<dynamic> productList = responseBody['data'];
         return productList.map((data) => Product.fromMap(data)).toList();
       } else if (responseBody is List) {
@@ -167,10 +201,10 @@ class AdminRepository {
   Future<void> adminDestroyProduct(String token, int productId) async {
     try {
       final response = await http.delete(
-        Uri.parse('$_baseUrl/admin/products/$productId'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/products/$productId'),
+        headers: getAuthHeaders(token),
       );
-      _handleResponse(response);
+      handleResponse(response);
     } catch (e) {
       print('adminDestroyProduct error: $e');
       rethrow;
@@ -178,14 +212,17 @@ class AdminRepository {
   }
 
   Future<Order> adminAssignDriver(
-      String token, int orderId, int driverId) async {
+      String token,
+      int orderId,
+      int driverId,
+      ) async {
     try {
       final response = await http.put(
-        Uri.parse('$_baseUrl/admin/orders/$orderId/assign-driver'),
-        headers: _getAuthHeaders(token),
+        Uri.parse('$baseUrl/admin/orders/$orderId/assign-driver'),
+        headers: getAuthHeaders(token),
         body: json.encode({'driver_id': driverId}),
       );
-      dynamic responseBody = _handleResponse(response);
+      dynamic responseBody = handleResponse(response);
       return Order.fromMap(responseBody['order'] ?? responseBody);
     } catch (e) {
       print('adminAssignDriver error: $e');

@@ -2,6 +2,7 @@ import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/repositories/auth_repository.dart';
+import 'package:cnpm_ptpm/repositories/user_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,17 +13,21 @@ import '../models/user.dart';
 class AccountState {
   final bool isLoading;
   final String? error;
+  final String? deliveryTicketStatus;
 
-  const AccountState({this.isLoading = false, this.error});
+  const AccountState({this.isLoading = false, this.error, this.deliveryTicketStatus});
 
   AccountState copyWith({
     bool? isLoading,
     String? error,
     bool clearError = false,
+    String? deliveryTicketStatus,
+    bool clearTicketStatus = false,
   }) {
     return AccountState(
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
+      deliveryTicketStatus: clearTicketStatus ? null : (deliveryTicketStatus ?? this.deliveryTicketStatus),
     );
   }
 }
@@ -31,6 +36,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
   final Ref _ref;
 
   AuthRepository get _authRepo => _ref.read(authRepositoryProvider);
+  UserRepository get _userRepo => _ref.read(userRepositoryProvider);
 
   AuthNotifier get _authNotifier => _ref.read(authProvider.notifier);
 
@@ -50,14 +56,15 @@ class AccountNotifier extends StateNotifier<AccountState> {
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     }
   }
 
   Future<bool> _executeAuthActionAndUpdateUser(
-    Future<User> Function(String token) action,
-  ) async {
+      Future<User> Function(String token) action,
+      ) async {
     final token = _token;
     if (token == null) {
       state = state.copyWith(error: 'User not logged in.', clearError: false);
@@ -72,30 +79,31 @@ class AccountNotifier extends StateNotifier<AccountState> {
       state = state.copyWith(isLoading: false);
       return true;
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      state = state.copyWith(isLoading: false, error: errorMessage);
       return false;
     }
   }
 
   Future<bool> updateAddress(String newAddress) {
     return _executeAuthActionAndUpdateUser(
-      (token) => _authRepo.updateUserAddress(token, newAddress),
+          (token) => _authRepo.updateUserAddress(token, newAddress),
     );
   }
 
   Future<bool> updateContactInfo({String? phone, String? address}) {
     return _executeAuthActionAndUpdateUser(
-      (token) => _authRepo.updateContact(token, phone: phone, address: address),
+          (token) => _authRepo.updateContact(token, phone: phone, address: address),
     );
   }
 
   Future<bool> changePassword(
-    String currentPassword,
-    String newPassword,
-    String confirmPassword,
-  ) {
+      String currentPassword,
+      String newPassword,
+      String confirmPassword,
+      ) {
     return _executeAuthAction(
-      (token) => _authRepo.changePassword(
+          (token) => _authRepo.changePassword(
         token,
         currentPassword,
         newPassword,
@@ -113,7 +121,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
     XFile? imageFile,
   }) {
     return _executeAuthActionAndUpdateUser(
-      (token) => _authRepo.updateSellerInfo(
+          (token) => _authRepo.updateSellerInfo(
         token,
         name: name,
         email: email,
@@ -125,30 +133,54 @@ class AccountNotifier extends StateNotifier<AccountState> {
     );
   }
 
+  Future<void> fetchDeliveryTicketStatus() async {
+    final token = _token;
+    if (token == null) return;
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final status = await _userRepo.getDeliveryTicketStatus(token);
+      state = state.copyWith(isLoading: false, deliveryTicketStatus: status);
+    } catch (e) {
+      final errorMessage = e.toString().replaceFirst('Exception: ', '');
+      state = state.copyWith(isLoading: false, error: errorMessage);
+    }
+  }
+
   Future<bool> submitDeliveryRequest({
     required String fullName,
     required String email,
     required String phone,
     required String idCardNumber,
     required XFile idCardImage,
-  }) {
-    return _executeAuthAction(
-      (token) => _ref
-          .read(userRepositoryProvider)
+  }) async {
+    final success = await _executeAuthAction(
+          (token) => _userRepo
           .submitDeliveryRequest(
-            token: token,
-            fullName: fullName,
-            email: email,
-            phone: phone,
-            idCardNumber: idCardNumber,
-            idCardImage: idCardImage,
-          ),
+        token: token,
+        fullName: fullName,
+        email: email,
+        phone: phone,
+        idCardNumber: idCardNumber,
+        idCardImage: idCardImage,
+      ),
     );
+
+    if (success) {
+      state = state.copyWith(deliveryTicketStatus: 'pending');
+    }
+
+    return success;
   }
 }
 
 final accountProvider = StateNotifierProvider<AccountNotifier, AccountState>((
-  ref,
-) {
+    ref,
+    ) {
   return AccountNotifier(ref);
+});
+
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return UserRepository();
 });
