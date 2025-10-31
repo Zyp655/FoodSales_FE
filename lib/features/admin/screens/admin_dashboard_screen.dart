@@ -3,11 +3,11 @@ import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
-import '../widgets/user_list_item.dart';
-import '../widgets/seller_list_item.dart';
 import 'package:cnpm_ptpm/models/order.dart';
-import 'package:cnpm_ptpm/models/user.dart';
+import 'package:cnpm_ptpm/models/account.dart';
+import '../widgets/admin_manage_categories_screen.dart';
 import 'admin_manage_tickets_screen.dart';
+import '../widgets/account_list_item.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   static const routeName = '/admin-dashboard';
@@ -68,10 +68,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   const SizedBox(height: 20),
                   DropdownButtonFormField<int>(
                     value: selectedDriverId,
-                    items: drivers.map((User driver) {
+                    items: drivers.map((Account driver) {
                       return DropdownMenuItem<int>(
                         value: driver.id,
-                        child: Text(driver.name ?? 'Unnamed Driver'),
+                        child: Text(driver.name),
                       );
                     }).toList(),
                     onChanged: (int? newValue) {
@@ -121,10 +121,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final adminState = ref.watch(adminProvider);
-    final users = adminState.allUsers;
-    final sellers = adminState.allSellers;
+    final accounts = adminState.allAccounts;
     final orders = adminState.allOrders;
     final pendingTicketsCount = adminState.deliveryTickets.length;
+    final currentFilter = adminState.accountFilter;
 
     return DefaultTabController(
       length: 4,
@@ -138,8 +138,8 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             isScrollable: true,
             tabs: [
               const Tab(text: 'Orders', icon: Icon(Icons.receipt)),
-              const Tab(text: 'Users', icon: Icon(Icons.person)),
-              const Tab(text: 'Sellers', icon: Icon(Icons.store)),
+              const Tab(text: 'Accounts', icon: Icon(Icons.people)),
+              const Tab(text: 'Categories', icon: Icon(Icons.category)),
               Tab(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -171,7 +171,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
           ),
         ),
         body: adminState.isLoading &&
-            (users.isEmpty && sellers.isEmpty && orders.isEmpty)
+            (accounts.isEmpty &&
+                orders.isEmpty &&
+                adminState.allCategories.isEmpty)
             ? const Center(child: CircularProgressIndicator())
             : TabBarView(
           children: [
@@ -192,8 +194,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                       'Seller: ${order.seller?.name ?? 'N/A'}\nDriver: ${order.deliveryPerson?.name ?? 'Not Assigned'}',
                     ),
                     isThreeLine: true,
-                    trailing:
-                    (order.status?.toLowerCase() ==
+                    trailing: (order.status?.toLowerCase() ==
                         'ready_for_pickup')
                         ? ElevatedButton(
                       child: const Text('Assign'),
@@ -211,28 +212,78 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                 },
               ),
             ),
-            RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(adminProvider.notifier).fetchAllData(),
-              child: users.isEmpty
-                  ? const Center(child: Text('No users found.'))
-                  : ListView.builder(
-                itemCount: users.length,
-                itemBuilder: (ctx, index) =>
-                    UserListItem(user: users[index]),
-              ),
+            Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8.0,
+                    horizontal: 4.0,
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        FilterChip(
+                          label: const Text('All'),
+                          selected: currentFilter == 'all',
+                          onSelected: (_) => ref
+                              .read(adminProvider.notifier)
+                              .setAccountFilter('all'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          label: const Text('Users'),
+                          selected: currentFilter == 'user',
+                          onSelected: (_) => ref
+                              .read(adminProvider.notifier)
+                              .setAccountFilter('user'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          label: const Text('Sellers'),
+                          selected: currentFilter == 'seller',
+                          onSelected: (_) => ref
+                              .read(adminProvider.notifier)
+                              .setAccountFilter('seller'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          label: const Text('Delivery'),
+                          selected: currentFilter == 'delivery',
+                          onSelected: (_) => ref
+                              .read(adminProvider.notifier)
+                              .setAccountFilter('delivery'),
+                        ),
+                        const SizedBox(width: 8),
+                        FilterChip(
+                          label: const Text('Admins'),
+                          selected: currentFilter == 'admin',
+                          onSelected: (_) => ref
+                              .read(adminProvider.notifier)
+                              .setAccountFilter('admin'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const Divider(height: 1),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: () =>
+                        ref.read(adminProvider.notifier).fetchAllData(),
+                    child: accounts.isEmpty
+                        ? const Center(child: Text('No accounts found.'))
+                        : ListView.builder(
+                      itemCount: accounts.length,
+                      itemBuilder: (ctx, index) =>
+                          AccountListItem(account: accounts[index]),
+                    ),
+                  ),
+                ),
+              ],
             ),
-            RefreshIndicator(
-              onRefresh: () =>
-                  ref.read(adminProvider.notifier).fetchAllData(),
-              child: sellers.isEmpty
-                  ? const Center(child: Text('No sellers found.'))
-                  : ListView.builder(
-                itemCount: sellers.length,
-                itemBuilder: (ctx, index) =>
-                    SellerListItem(seller: sellers[index]),
-              ),
-            ),
+            const AdminManageCategoriesScreen(),
             const AdminManageTicketsScreen(),
           ],
         ),

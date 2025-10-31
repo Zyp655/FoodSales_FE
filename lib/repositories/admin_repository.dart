@@ -3,6 +3,8 @@ import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/models/order.dart';
+import '../models/account.dart';
+import '../models/category.dart';
 import '../models/delivery_ticket.dart';
 import '../models/seller.dart';
 import 'base_repository.dart';
@@ -111,25 +113,6 @@ class AdminRepository extends BaseRepository {
     }
   }
 
-  Future<Seller> adminUpdateSellerStatus(
-      String token,
-      int sellerId,
-      String status,
-      ) async {
-    try {
-      final response = await http.put(
-        Uri.parse('$baseUrl/admin/sellers/$sellerId/status'),
-        headers: getAuthHeaders(token),
-        body: json.encode({'status': status}),
-      );
-      dynamic responseBody = handleResponse(response);
-      return Seller.fromMap(responseBody['seller'] ?? responseBody);
-    } catch (e) {
-      print('adminUpdateSellerStatus error: $e');
-      rethrow;
-    }
-  }
-
   Future<List<User>> adminListAllUsers(String token) async {
     try {
       final response = await http.get(
@@ -172,6 +155,20 @@ class AdminRepository extends BaseRepository {
       return User.fromMap(responseBody['user'] ?? responseBody);
     } catch (e) {
       print('adminUpdateUserRole error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> adminUpdateSellerRole(
+      String token, int sellerId, String role) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/sellers/$sellerId/role'),
+        headers: getAuthHeaders(token),
+        body: json.encode({'role': role}),
+      );
+      handleResponse(response);
+    } catch (e) {
       rethrow;
     }
   }
@@ -226,6 +223,119 @@ class AdminRepository extends BaseRepository {
       return Order.fromMap(responseBody['order'] ?? responseBody);
     } catch (e) {
       print('adminAssignDriver error: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Account>> adminGetAccounts(String token,
+      {String type = 'all'}) async {
+    try {
+      final uri = Uri.parse('$baseUrl/admin/accounts').replace(
+        queryParameters: {'type': type},
+      );
+
+      final response = await http.get(uri, headers: getAuthHeaders(token));
+      dynamic responseBody = handleResponse(response);
+
+      List<dynamic> accountList = [];
+      if (responseBody is Map && responseBody.containsKey('data')) {
+        accountList = responseBody['data'];
+      }
+      return accountList.map((data) => Account.fromMap(data)).toList();
+    } catch (e) {
+      print('adminGetAccounts error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> adminDeleteUser(String token, int userId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/users/$userId'),
+        headers: getAuthHeaders(token),
+      );
+      handleResponse(response);
+    } catch (e) {
+      print('adminDeleteUser error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> adminDeleteSeller(String token, int sellerId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/sellers/$sellerId'),
+        headers: getAuthHeaders(token),
+      );
+      handleResponse(response);
+    } catch (e) {
+      print('adminDeleteSeller error: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Category>> adminGetCategories(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/categories'),
+        headers: getAuthHeaders(token),
+      );
+      dynamic responseBody = handleResponse(response);
+      List<dynamic> categoryList = responseBody['data'];
+      return categoryList.map((data) => Category.fromMap(data)).toList();
+    } catch (e) {
+      print('adminGetCategories error: $e');
+      rethrow;
+    }
+  }
+
+  Future<Category> adminCreateCategory(
+      String token, String name, String? description) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/admin/categories'),
+        headers: getAuthHeaders(token),
+        body: json.encode({
+          'name': name,
+          'description': description,
+        }),
+      );
+      dynamic responseBody = handleResponse(response);
+      return Category.fromMap(responseBody['data']);
+    } catch (e) {
+      print('adminCreateCategory error: $e');
+      rethrow;
+    }
+  }
+
+  Future<Category> adminUpdateCategory(
+      String token, int categoryId, String name, String? description) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl/admin/categories/$categoryId'),
+        headers: getAuthHeaders(token),
+        body: json.encode({
+          'name': name,
+          'description': description,
+        }),
+      );
+      dynamic responseBody = handleResponse(response);
+      return Category.fromMap(responseBody['data']);
+    } catch (e) {
+      print('adminUpdateCategory error: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> adminDeleteCategory(String token, int categoryId) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl/admin/categories/$categoryId'),
+        headers: getAuthHeaders(token),
+      );
+      handleResponse(response);
+    } catch (e) {
+      print('adminDeleteCategory error: $e');
       rethrow;
     }
   }

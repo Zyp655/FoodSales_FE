@@ -93,12 +93,6 @@ class AppRouter {
           return MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product));
         }
         return _errorRoute('Missing product argument for ProductDetailScreen');
-      case ManageUsersScreen.routeName:
-        final user = settings.arguments;
-        if (user != null && user is User) {
-          return MaterialPageRoute(builder: (_) => ManageUsersScreen(user: user));
-        }
-        return _errorRoute('Missing user argument for ManageUsersScreen');
       case ManageProductsScreen.routeName:
         final product = settings.arguments as Product?;
         return MaterialPageRoute(builder: (_) => ManageProductsScreen(product: product));

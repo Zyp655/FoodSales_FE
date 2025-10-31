@@ -28,7 +28,7 @@ class Seller {
       email: sellerData['email'] as String?,
       address: sellerData['address'] as String?,
       description: sellerData['description'] as String?,
-      phone: sellerData['phone'] as String?, // <<< Thêm parse
+      phone: sellerData['phone'] as String?,
     );
   }
 
