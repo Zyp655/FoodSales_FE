@@ -1,4 +1,3 @@
-import 'package:cnpm_ptpm/providers/user_provider.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/repositories/auth_repository.dart';
@@ -93,7 +92,7 @@ class AccountNotifier extends StateNotifier<AccountState> {
 
   Future<bool> updateContactInfo({String? phone, String? address}) {
     return _executeAuthActionAndUpdateUser(
-          (token) => _authRepo.updateContact(token, phone: phone, address: address),
+          (token) => _authRepo.updateProfile(token, phone: phone, address: address),
     );
   }
 

@@ -4,8 +4,8 @@ import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/user.dart';
 import 'package:image_picker/image_picker.dart';
 import 'base_repository.dart';
-class AuthRepository extends BaseRepository {
 
+class AuthRepository extends BaseRepository {
   Future<User> login(String email, String password) async {
     try {
       final response = await http.post(
@@ -72,19 +72,20 @@ class AuthRepository extends BaseRepository {
     }
   }
 
-  Future<User> updateContact(
+  Future<User> updateProfile(
     String token, {
+    String? name,
     String? phone,
     String? address,
   }) async {
     try {
       Map<String, dynamic> body = {};
+      if (name != null) body['name'] = name;
       if (phone != null) body['phone'] = phone;
-      if (address != null) body['address'] = address;
       if (body.isEmpty) return getAuthenticatedUser(token);
 
       final response = await http.put(
-        Uri.parse('$baseUrl/user/contact'),
+        Uri.parse('$baseUrl/user/profile'),
         headers: getAuthHeaders(token),
         body: json.encode(body),
       );
@@ -92,11 +93,11 @@ class AuthRepository extends BaseRepository {
       if (responseBody == null ||
           responseBody is! Map ||
           !responseBody.containsKey('user')) {
-        throw Exception('Invalid update contact response format.');
+        throw Exception('Invalid update profile response format.');
       }
       return User.fromMap(responseBody as Map<String, dynamic>);
     } catch (e) {
-      print('updateContact error: $e');
+      print('updateProfile error: $e');
       rethrow;
     }
   }

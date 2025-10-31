@@ -96,7 +96,7 @@ class AdminRepository extends BaseRepository {
       throw Exception('Invalid status. Must be "approved" or "rejected".');
     }
     try {
-      final response = await http.put(
+      final response = await http.post(
         Uri.parse('$baseUrl/admin/delivery-tickets/$ticketId/status'),
         headers: getAuthHeaders(token),
         body: json.encode({'status': newStatus}),

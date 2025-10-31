@@ -15,15 +15,14 @@ class DeliveryTicketItem extends ConsumerWidget {
         .updateDeliveryTicketStatus(ticket.id, status);
 
     final snackBarContent = success
-        ? 'Successfully ${status} delivery request for ${ticket.fullName}'
+        ? 'Successfully $status delivery request for ${ticket.fullName}'
         : 'Failed to update status.';
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(snackBarContent),
-        backgroundColor: success ? Colors.green : Colors.red,
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(snackBarContent),
+          backgroundColor: success ? Colors.green : Colors.red,
+        ),
+      );
   }
 
   void _viewIdCardImage(BuildContext context) {
@@ -65,17 +64,17 @@ class DeliveryTicketItem extends ConsumerWidget {
             const SizedBox(height: 5),
             Text(
               userName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             Text(userEmail, style: const TextStyle(color: Colors.blue)),
             Text('Phone: ${ticket.phone}'),
             Text('ID Card: ${ticket.idCardNumber}'),
             Text(
               'Status: ${ticket.status.toUpperCase()}',
-              style: const TextStyle(color: Colors.orange, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.orange,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 10),
 
@@ -93,7 +92,10 @@ class DeliveryTicketItem extends ConsumerWidget {
                   onPressed: isProcessing
                       ? null
                       : () => _updateStatus(context, ref, 'rejected'),
-                  child: const Text('REJECT', style: TextStyle(color: Colors.red)),
+                  child: const Text(
+                    'REJECT',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
@@ -105,13 +107,13 @@ class DeliveryTicketItem extends ConsumerWidget {
                   ),
                   child: isProcessing
                       ? const SizedBox(
-                    height: 15,
-                    width: 15,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
-                    ),
-                  )
+                          height: 15,
+                          width: 15,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
                       : const Text('APPROVE'),
                 ),
               ],

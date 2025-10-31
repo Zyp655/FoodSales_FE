@@ -6,38 +6,46 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class AdminManageCategoriesScreen extends ConsumerWidget {
   const AdminManageCategoriesScreen({super.key});
 
-  void _showDeleteDialog(BuildContext context, WidgetRef ref, Category category) {
+  void _showDeleteDialog(BuildContext context,
+      WidgetRef ref,
+      Category category,) {
     showDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Confirm Deletion'),
-        content: Text(
-          'Are you sure you want to delete ${category.name}? This action cannot be undone.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
+      builder: (ctx) =>
+          AlertDialog(
+            title: const Text('Confirm Deletion'),
+            content: Text(
+              'Are you sure you want to delete ${category
+                  .name}? This action cannot be undone.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(ctx).pop(),
+                child: const Text('Cancel'),
+              ),
+              TextButton(
+                style: TextButton.styleFrom(foregroundColor: Colors.red),
+                onPressed: () {
+                  ref.read(adminProvider.notifier).adminDeleteCategory(
+                      category.id);
+                  Navigator.of(ctx).pop();
+                },
+                child: const Text('Delete'),
+              ),
+            ],
           ),
-          TextButton(
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            onPressed: () {
-              ref.read(adminProvider.notifier).adminDeleteCategory(category.id);
-              Navigator.of(ctx).pop();
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
   }
 
-  void _showAddOrEditDialog(BuildContext context, WidgetRef ref,
-      [Category? category]) {
+  void _showAddOrEditDialog(BuildContext context,
+      WidgetRef ref, [
+        Category? category,
+      ]) {
     final formKey = GlobalKey<FormState>();
     final nameController = TextEditingController(text: category?.name);
-    final descriptionController =
-    TextEditingController(text: category?.description);
+    final descriptionController = TextEditingController(
+      text: category?.description,
+    );
     final bool isEditing = category != null;
 
     showDialog(
@@ -54,7 +62,9 @@ class AdminManageCategoriesScreen extends ConsumerWidget {
                   controller: nameController,
                   decoration: const InputDecoration(labelText: 'Category Name'),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
+                    if (value == null || value
+                        .trim()
+                        .isEmpty) {
                       return 'Please enter a name.';
                     }
                     return null;
@@ -79,13 +89,17 @@ class AdminManageCategoriesScreen extends ConsumerWidget {
                   final description = descriptionController.text.trim();
 
                   if (isEditing) {
-                    ref.read(adminProvider.notifier).adminUpdateCategory(
+                    ref
+                        .read(adminProvider.notifier)
+                        .adminUpdateCategory(
                       category.id,
                       name,
                       description.isEmpty ? null : description,
                     );
                   } else {
-                    ref.read(adminProvider.notifier).adminCreateCategory(
+                    ref
+                        .read(adminProvider.notifier)
+                        .adminCreateCategory(
                       name,
                       description.isEmpty ? null : description,
                     );
@@ -127,8 +141,11 @@ class AdminManageCategoriesScreen extends ConsumerWidget {
                         _showAddOrEditDialog(context, ref, category),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline,
-                        color: Colors.red, size: 20),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: Colors.red,
+                      size: 20,
+                    ),
                     onPressed: () =>
                         _showDeleteDialog(context, ref, category),
                   ),

@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:cnpm_ptpm/models/order_item.dart';
+import 'order_item.dart';
 import 'package:cnpm_ptpm/models/seller.dart';
 import 'package:cnpm_ptpm/models/user.dart';
 
@@ -26,6 +26,8 @@ class Order {
   User? user;
   Seller? seller;
   User? deliveryPerson;
+  double? commissionAmount;
+  double? distanceKm;
 
   Order({
     this.id,
@@ -40,6 +42,8 @@ class Order {
     this.user,
     this.seller,
     this.deliveryPerson,
+    this.commissionAmount,
+    this.distanceKm,
   });
 
   factory Order.fromMap(Map<String, dynamic> map) {
@@ -68,7 +72,11 @@ class Order {
           : null,
       user: map['user'] != null ? User.fromMap(map['user']) : null,
       seller: map['seller'] != null ? Seller.fromMap(map['seller']) : null,
-      deliveryPerson: map['delivery_person'] != null ? User.fromMap(map['delivery_person']) : null, // Thêm deliveryPerson
+      deliveryPerson: map['delivery_person'] != null
+          ? User.fromMap(map['delivery_person'])
+          : null,
+      commissionAmount: (map['commission_amount'] as num?)?.toDouble(),
+      distanceKm: (map['distance_km'] as num?)?.toDouble(),
     );
   }
 

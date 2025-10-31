@@ -67,7 +67,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
                   Text('Seller: ${order.seller?.name ?? 'N/A'}'),
                   const SizedBox(height: 20),
                   DropdownButtonFormField<int>(
-                    value: selectedDriverId,
+                    initialValue: selectedDriverId,
                     items: drivers.map((Account driver) {
                       return DropdownMenuItem<int>(
                         value: driver.id,
@@ -139,7 +139,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen> {
             tabs: [
               const Tab(text: 'Orders', icon: Icon(Icons.receipt)),
               const Tab(text: 'Accounts', icon: Icon(Icons.people)),
-              const Tab(text: 'Categories', icon: Icon(Icons.category)),
+              const Tab(text: 'Categories', icon: Icon(Icons.fastfood_outlined)),
               Tab(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,

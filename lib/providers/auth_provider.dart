@@ -62,7 +62,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _authRepo.registerUser(userData);
-      final user = await _authRepo.login(userData['email'], userData['password']);
+      final user =
+      await _authRepo.login(userData['email'], userData['password']);
       state = state.copyWith(isLoading: false, currentUser: user);
       return true;
     } catch (e) {
@@ -75,8 +76,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       await _authRepo.registerSeller(sellerData);
-      final user = await _authRepo.login(sellerData['email'], sellerData['password']);
+      final user =
+      await _authRepo.login(sellerData['email'], sellerData['password']);
       state = state.copyWith(isLoading: false, currentUser: user);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> updateProfile(String name, String phone) async {
+    final currentToken = token;
+    if (currentToken == null) return false;
+
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final updatedUser = await _authRepo.updateProfile(
+        currentToken,
+        name: name,
+        phone: phone,
+      );
+      state = state.copyWith(isLoading: false, currentUser: updatedUser);
       return true;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -93,4 +114,3 @@ final authProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final authRepo = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepo);
 });
-
