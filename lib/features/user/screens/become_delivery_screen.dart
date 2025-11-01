@@ -84,7 +84,7 @@ class _BecomeDeliveryScreenState extends ConsumerState<BecomeDeliveryScreen> {
         SnackBar(
           content: Text(
             success
-                ? 'Application submitted! Awaiting admin review.' // Thay đổi thông báo
+                ? 'Application submitted! Awaiting admin review.'
                 : ref.read(accountProvider).error ?? 'Submission failed.',
           ),
           backgroundColor: success ? Colors.green : Colors.red,

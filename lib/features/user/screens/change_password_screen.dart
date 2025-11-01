@@ -48,8 +48,6 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
         _newPasswordController.clear();
         _confirmPasswordController.clear();
         FocusScope.of(context).unfocus();
-        // Optionally navigate back after success
-        // Navigator.of(context).pop();
       }
       setState(() => _isSavingPassword = false);
     }
@@ -61,13 +59,13 @@ class _ChangePasswordScreenState extends ConsumerState<ChangePasswordScreen> {
       appBar: AppBar(
         title: const Text('Change Password'),
       ),
-      body: SingleChildScrollView( // Use SingleChildScrollView in case keyboard appears
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Form(
           key: _passwordFormKey,
           child: Column(
             children: [
-              const SizedBox(height: 20), // Add some spacing
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _currentPasswordController,
                 decoration: const InputDecoration(labelText: 'Current Password'),

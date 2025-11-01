@@ -29,10 +29,7 @@ import 'features/seller/screens/seller_orders_screen.dart';
 import 'features/delivery/screens/delivery_home_screen.dart';
 import 'features/delivery/screens/delivery_order_detail_screen.dart';
 import 'features/delivery/screens/delivery_profile_screen.dart';
-
-// THÊM IMPORT NÀY:
 import 'features/delivery/screens/assigned_orders_screen.dart';
-
 import 'models/product.dart';
 import 'models/order.dart';
 
@@ -65,9 +62,8 @@ class AppRouter {
         return MaterialPageRoute(builder: (_) => const DeliveryHomeScreen());
       case DeliveryProfileScreen.routeName:
         return MaterialPageRoute(builder: (_) => const DeliveryProfileScreen());
-        case AssignedOrdersScreen.routeName:
+      case AssignedOrdersScreen.routeName:
         return MaterialPageRoute(builder: (_) => const AssignedOrdersScreen());
-
       case SettingsScreen.routeName:
         return MaterialPageRoute(builder: (_) => const SettingsScreen());
       case ProfileScreen.routeName:
@@ -81,7 +77,8 @@ class AppRouter {
       case SellerAnalyticsScreen.routeName:
         return MaterialPageRoute(builder: (_) => const SellerAnalyticsScreen());
       case SellerChangePasswordScreen.routeName:
-        return MaterialPageRoute(builder: (_) => const SellerChangePasswordScreen());
+        return MaterialPageRoute(
+            builder: (_) => const SellerChangePasswordScreen());
       case StoreInfoScreen.routeName:
         return MaterialPageRoute(builder: (_) => const StoreInfoScreen());
       case BecomeDeliveryScreen.routeName:
@@ -89,32 +86,45 @@ class AppRouter {
       case SellerDetailScreen.routeName:
         final seller = settings.arguments;
         if (seller != null && seller is Seller) {
-          return MaterialPageRoute(builder: (_) => SellerDetailScreen(seller: seller));
+          return MaterialPageRoute(
+              builder: (_) => SellerDetailScreen(seller: seller));
         }
         return _errorRoute('Missing seller argument for SellerDetailScreen');
       case ProductDetailScreen.routeName:
         final product = settings.arguments;
         if (product != null && product is Product) {
-          return MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product));
+          return MaterialPageRoute(
+              builder: (_) => ProductDetailScreen(product: product));
         }
         return _errorRoute('Missing product argument for ProductDetailScreen');
       case ManageProductsScreen.routeName:
         final product = settings.arguments as Product?;
-        return MaterialPageRoute(builder: (_) => ManageProductsScreen(product: product));
+        return MaterialPageRoute(
+            builder: (_) => ManageProductsScreen(product: product));
       case SellerOrdersScreen.routeName:
-        return MaterialPageRoute(builder: (_) => const SellerOrdersScreen());
+        final filterStatus = settings.arguments as String?;
+        return MaterialPageRoute(
+          builder: (_) => SellerOrdersScreen(
+            filterStatus: filterStatus,
+            showAppBar: true,
+          ),
+        );
       case SellerOrderDetailScreen.routeName:
         final order = settings.arguments;
         if (order != null && order is Order) {
-          return MaterialPageRoute(builder: (_) => SellerOrderDetailScreen(order: order));
+          return MaterialPageRoute(
+              builder: (_) => SellerOrderDetailScreen(order: order));
         }
-        return _errorRoute('Missing order argument for SellerOrderDetailScreen');
+        return _errorRoute(
+            'Missing order argument for SellerOrderDetailScreen');
       case DeliveryOrderDetailScreen.routeName:
         final order = settings.arguments;
         if (order != null && order is Order) {
-          return MaterialPageRoute(builder: (_) => DeliveryOrderDetailScreen(order: order));
+          return MaterialPageRoute(
+              builder: (_) => DeliveryOrderDetailScreen(order: order));
         }
-        return _errorRoute('Missing order argument for DeliveryOrderDetailScreen');
+        return _errorRoute(
+            'Missing order argument for DeliveryOrderDetailScreen');
       case AvailableOrdersScreen.routeName:
         return MaterialPageRoute(builder: (_) => const AvailableOrdersScreen());
       default:

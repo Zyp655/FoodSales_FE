@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:cnpm_ptpm/models/order.dart';
+import 'package:cnpm_ptpm/models/seller_analytics.dart';
 import 'package:cnpm_ptpm/repositories/seller_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -14,24 +15,32 @@ final sellerRepositoryProvider = Provider<SellerRepository>((ref) {
 @immutable
 class SellerState {
   final List<Product> myProducts;
+  final SellerAnalytics? analytics;
   final bool isLoading;
+  final bool isAnalyticsLoading;
   final String? error;
 
   const SellerState({
     this.myProducts = const [],
+    this.analytics,
     this.isLoading = false,
+    this.isAnalyticsLoading = false,
     this.error,
   });
 
   SellerState copyWith({
     List<Product>? myProducts,
+    SellerAnalytics? analytics,
     bool? isLoading,
+    bool? isAnalyticsLoading,
     String? error,
     bool clearError = false,
   }) {
     return SellerState(
       myProducts: myProducts ?? this.myProducts,
+      analytics: analytics ?? this.analytics,
       isLoading: isLoading ?? this.isLoading,
+      isAnalyticsLoading: isAnalyticsLoading ?? this.isAnalyticsLoading,
       error: clearError ? null : (error ?? this.error),
     );
   }
@@ -124,6 +133,18 @@ class SellerNotifier extends StateNotifier<SellerState> {
     } catch (e) {
       print('updateSellerOrderStatus Error: $e');
       return false;
+    }
+  }
+
+  Future<void> fetchAnalytics() async {
+    final token = _getToken();
+    if (token == null) return;
+    state = state.copyWith(isAnalyticsLoading: true);
+    try {
+      final analyticsData = await _getRepo().getAnalytics(token);
+      state = state.copyWith(isAnalyticsLoading: false, analytics: analyticsData);
+    } catch (e) {
+      state = state.copyWith(isAnalyticsLoading: false, error: e.toString());
     }
   }
 }

@@ -106,24 +106,33 @@ class DeliveryNotifier extends StateNotifier<DeliveryState> {
     }
   }
 
-  Future<void> updateDeliveryStatus(int orderId, String status) async {
+  Future<Order> updateDeliveryStatus(int orderId, String status) async {
     final token = _getToken();
-    if (token == null) return;
+    if (token == null) throw Exception('Not authenticated');
+
     state = state.copyWith(isLoading: true, clearError: true);
+
     try {
       final updatedOrder =
       await _getRepo().deliveryUpdateDeliveryStatus(token, orderId, status);
 
+      final newAssignedList = state.assignedOrders
+          .map((order) => order.id == orderId ? updatedOrder : order)
+          .where((order) =>
+      order.status != Order.STATUS_DELIVERED &&
+          order.status != Order.STATUS_CANCELLED)
+          .toList();
+
       state = state.copyWith(
         isLoading: false,
-        assignedOrders: state.assignedOrders
-            .where((order) => order.id != orderId)
-            .toList(),
+        assignedOrders: newAssignedList,
       );
 
       fetchDeliveryStats();
+      return updatedOrder;
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
     }
   }
 }

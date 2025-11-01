@@ -3,10 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:cnpm_ptpm/models/product.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cnpm_ptpm/models/order.dart';
+import '../models/seller_analytics.dart';
 import 'base_repository.dart';
 
 class SellerRepository extends BaseRepository {
-
   Future<List<Order>> getSellerOrders(String token) async {
     try {
       final response = await http.get(
@@ -52,10 +52,10 @@ class SellerRepository extends BaseRepository {
   }
 
   Future<Product> addProduct(
-    String token,
-    Product product,
-    XFile? imageFile,
-  ) async {
+      String token,
+      Product product,
+      XFile? imageFile,
+      ) async {
     try {
       var request = http.MultipartRequest(
         'POST',
@@ -89,10 +89,10 @@ class SellerRepository extends BaseRepository {
   }
 
   Future<Order> updateSellerOrderStatus(
-    String token,
-    int orderId,
-    String status,
-  ) async {
+      String token,
+      int orderId,
+      String status,
+      ) async {
     try {
       final response = await http.put(
         Uri.parse('$baseUrl/seller/orders/$orderId/status'),
@@ -110,11 +110,11 @@ class SellerRepository extends BaseRepository {
   }
 
   Future<Product> updateProduct(
-    String token,
-    int productId,
-    Product product,
-    XFile? imageFile,
-  ) async {
+      String token,
+      int productId,
+      Product product,
+      XFile? imageFile,
+      ) async {
     try {
       var request = http.MultipartRequest(
         'POST',
@@ -157,6 +157,23 @@ class SellerRepository extends BaseRepository {
       );
       handleResponse(response);
     } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<SellerAnalytics> getAnalytics(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/seller/orders/analytics'),
+        headers: getAuthHeaders(token),
+      );
+      dynamic responseBody = handleResponse(response);
+      if (responseBody is Map && responseBody.containsKey('stats')) {
+        return SellerAnalytics.fromMap(responseBody['stats']);
+      }
+      throw Exception('Failed to load seller analytics');
+    } catch (e) {
+      print('getAnalytics error: $e');
       rethrow;
     }
   }

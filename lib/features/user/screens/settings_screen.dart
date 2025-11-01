@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'contact_info_screen.dart'; // Import new screen
-import 'change_password_screen.dart'; // Import new screen
-import 'package:cnpm_ptpm/providers/auth_provider.dart'; // For Logout
-import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart'; // For Logout
+import 'contact_info_screen.dart';
+import 'change_password_screen.dart';
+import 'package:cnpm_ptpm/providers/auth_provider.dart';
+import 'package:cnpm_ptpm/features/auth/screens/login_screen.dart';
 
-class SettingsScreen extends ConsumerWidget { // Can be ConsumerWidget now
+class SettingsScreen extends ConsumerWidget {
   static const routeName = '/settings';
   const SettingsScreen({super.key});
 
@@ -43,7 +43,7 @@ class SettingsScreen extends ConsumerWidget { // Can be ConsumerWidget now
             },
           ),
           const Divider(height: 1),
-          ListTile( // Optional: Logout here or keep in ProfileScreen AppBar
+          ListTile(
             leading: Icon(Icons.logout, color: Colors.red.shade700),
             title: Text('Logout', style: TextStyle(color: Colors.red.shade700)),
             onTap: () => _logout(context, ref),
