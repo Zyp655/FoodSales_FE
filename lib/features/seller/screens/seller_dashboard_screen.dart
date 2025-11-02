@@ -20,9 +20,9 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
   int _selectedIndex = 0;
 
   final List<Widget> _pages = [
-    const SellerProductList(),
-    const SellerOrdersScreen(),
-    const SellerProfileScreen(),
+    SellerProductList(),
+    SellerOrdersScreen(showAppBar: false,),
+    SellerProfileScreen(),
   ];
 
   void _onItemTapped(int index) {
