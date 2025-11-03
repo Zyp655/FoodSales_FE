@@ -41,7 +41,6 @@ class AccountListItem extends ConsumerWidget {
         ? ['user', 'delivery', 'admin', 'banned']
         : ['seller', 'banned'];
 
-
     if (!roleOptions.contains(selectedRole)) {
       selectedRole = roleOptions.first;
     }
@@ -135,7 +134,8 @@ class AccountListItem extends ConsumerWidget {
         spacing: 0,
         children: [
           Chip(
-            label: Text(chipText, style: const TextStyle(fontSize: 10, color: Colors.white)),
+            label: Text(chipText,
+                style: const TextStyle(fontSize: 10, color: Colors.white)),
             backgroundColor: chipColor,
             side: BorderSide.none,
           ),
