@@ -5,6 +5,7 @@ import 'package:cnpm_ptpm/models/user.dart';
 import 'package:cnpm_ptpm/models/order.dart';
 import '../models/account.dart';
 import '../models/category.dart';
+import '../models/conversation.dart';
 import '../models/delivery_ticket.dart';
 import '../models/seller.dart';
 import 'base_repository.dart';
@@ -336,6 +337,27 @@ class AdminRepository extends BaseRepository {
       handleResponse(response);
     } catch (e) {
       print('adminDeleteCategory error: $e');
+      rethrow;
+    }
+  }
+
+  Future<List<Conversation>> getConversations(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/admin/conversations'),
+        headers: getAuthHeaders(token),
+      );
+      dynamic responseBody = handleResponse(response);
+
+      List<dynamic> conversationList = [];
+      if (responseBody is Map && responseBody.containsKey('data')) {
+        conversationList = responseBody['data'];
+      }
+      return conversationList
+          .map((data) => Conversation.fromMap(data as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('getConversations error: $e');
       rethrow;
     }
   }

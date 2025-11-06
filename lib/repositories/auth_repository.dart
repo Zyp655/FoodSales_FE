@@ -73,11 +73,11 @@ class AuthRepository extends BaseRepository {
   }
 
   Future<User> updateProfile(
-    String token, {
-    String? name,
-    String? phone,
-    String? address,
-  }) async {
+      String token, {
+        String? name,
+        String? phone,
+        String? address,
+      }) async {
     try {
       Map<String, dynamic> body = {};
       if (name != null) body['name'] = name;
@@ -103,11 +103,11 @@ class AuthRepository extends BaseRepository {
   }
 
   Future<void> changePassword(
-    String token,
-    String currentPassword,
-    String newPassword,
-    String confirmPassword,
-  ) async {
+      String token,
+      String currentPassword,
+      String newPassword,
+      String confirmPassword,
+      ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/user/password'),
@@ -126,14 +126,14 @@ class AuthRepository extends BaseRepository {
   }
 
   Future<User> updateSellerInfo(
-    String token, {
-    required String name,
-    required String email,
-    required String? phone,
-    required String address,
-    required String description,
-    XFile? imageFile,
-  }) async {
+      String token, {
+        required String name,
+        required String email,
+        required String? phone,
+        required String address,
+        required String description,
+        XFile? imageFile,
+      }) async {
     try {
       var request = http.MultipartRequest(
         'POST',
@@ -159,9 +159,6 @@ class AuthRepository extends BaseRepository {
 
       final streamedResponse = await request.send();
       final response = await http.Response.fromStream(streamedResponse);
-
-      print('DEBUG: Update Seller Info Status Code: ${response.statusCode}');
-      print('DEBUG: Update Seller Info Response Body: ${response.body}');
 
       dynamic responseBody = handleResponse(response);
       if (responseBody == null ||
