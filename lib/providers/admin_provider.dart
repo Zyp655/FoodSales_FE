@@ -4,6 +4,7 @@ import 'package:cnpm_ptpm/models/order.dart';
 import 'package:cnpm_ptpm/models/delivery_ticket.dart';
 import 'package:cnpm_ptpm/models/account.dart';
 import 'package:cnpm_ptpm/models/category.dart';
+import 'package:cnpm_ptpm/models/conversation.dart';
 import 'package:cnpm_ptpm/repositories/admin_repository.dart';
 import 'package:cnpm_ptpm/providers/auth_provider.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -18,6 +19,7 @@ class AdminState {
   final List<Order> allOrders;
   final List<DeliveryTicket> deliveryTickets;
   final List<Category> allCategories;
+  final List<Conversation> conversations;
   final bool isLoading;
   final bool isTicketProcessing;
   final String? error;
@@ -28,6 +30,7 @@ class AdminState {
     this.allOrders = const [],
     this.deliveryTickets = const [],
     this.allCategories = const [],
+    this.conversations = const [],
     this.isLoading = false,
     this.isTicketProcessing = false,
     this.error,
@@ -39,6 +42,7 @@ class AdminState {
     List<Order>? allOrders,
     List<DeliveryTicket>? deliveryTickets,
     List<Category>? allCategories,
+    List<Conversation>? conversations,
     bool? isLoading,
     bool? isTicketProcessing,
     String? error,
@@ -50,6 +54,7 @@ class AdminState {
       allOrders: allOrders ?? this.allOrders,
       deliveryTickets: deliveryTickets ?? this.deliveryTickets,
       allCategories: allCategories ?? this.allCategories,
+      conversations: conversations ?? this.conversations,
       isLoading: isLoading ?? this.isLoading,
       isTicketProcessing: isTicketProcessing ?? this.isTicketProcessing,
       error: clearError ? null : (error ?? this.error),
@@ -80,9 +85,15 @@ class AdminNotifier extends StateNotifier<AdminState> {
       final ordersFuture = _getRepo().adminGetAllOrders(token);
       final ticketsFuture = _getRepo().adminGetAllDeliveryTickets(token);
       final categoriesFuture = _getRepo().adminGetCategories(token);
+      final conversationsFuture = _getRepo().getConversations(token);
 
-      final results = await Future.wait(
-          [accountsFuture, ordersFuture, ticketsFuture, categoriesFuture]);
+      final results = await Future.wait([
+        accountsFuture,
+        ordersFuture,
+        ticketsFuture,
+        categoriesFuture,
+        conversationsFuture
+      ]);
 
       state = state.copyWith(
         isLoading: false,
@@ -90,6 +101,7 @@ class AdminNotifier extends StateNotifier<AdminState> {
         allOrders: results[1] as List<Order>,
         deliveryTickets: results[2] as List<DeliveryTicket>,
         allCategories: results[3] as List<Category>,
+        conversations: results[4] as List<Conversation>,
       );
     } catch (e) {
       final errorMessage = e.toString().replaceFirst('Exception: ', '');
@@ -293,4 +305,8 @@ final deliveryDriversProvider = Provider<List<Account>>((ref) {
 
 final pendingDeliveryTicketsProvider = Provider<List<DeliveryTicket>>((ref) {
   return ref.watch(adminProvider).deliveryTickets;
+});
+
+final adminConversationsProvider = Provider<List<Conversation>>((ref) {
+  return ref.watch(adminProvider).conversations;
 });
