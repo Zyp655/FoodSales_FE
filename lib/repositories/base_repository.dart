@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 abstract class BaseRepository {
-  final String baseUrl = 'http://10.0.2.2/api';
+  final String baseUrl = 'http://10.0.2.2:8000/api';
 
   Map<String, String> getAuthHeaders(String token, {bool isMultipart = false}) {
     var headers = {
