@@ -9,7 +9,7 @@ class DeliveryTicket {
   final String email;
   final String phone;
   final String idCardNumber;
-  final String idCardImageUrl; // Đây là đường dẫn đầy đủ
+  final String idCardImageUrl;
   final String status;
   final DateTime createdAt;
 

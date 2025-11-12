@@ -20,15 +20,14 @@ class Seller {
   });
 
   factory Seller.fromMap(Map<String, dynamic> map) {
-    Map<String, dynamic> sellerData = map['seller'] ?? map;
     return Seller(
-      id: (sellerData['id'] as num?)?.toInt(),
-      name: sellerData['name'] as String?,
-      image: sellerData['image'] as String?,
-      email: sellerData['email'] as String?,
-      address: sellerData['address'] as String?,
-      description: sellerData['description'] as String?,
-      phone: sellerData['phone'] as String?,
+      id: (map['id'] as num?)?.toInt(),
+      name: map['name'] as String?,
+      image: map['image'] as String?,
+      email: map['email'] as String?,
+      address: map['address'] as String?,
+      description: map['description'] as String?,
+      phone: map['phone'] as String?,
     );
   }
 

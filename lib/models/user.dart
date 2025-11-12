@@ -1,19 +1,17 @@
-import 'dart:convert';
-
 class User {
-  int? id;
-  String? name;
-  String? email;
-  String? role;
-  String? address;
-  double? lat;
-  double? lng;
-  String? phone;
-  String? token;
-  String? image;
-  String? description;
+  final int? id;
+  final String? name;
+  final String? email;
+  final String? role;
+  final String? address;
+  final double? lat;
+  final double? lng;
+  final String? phone;
+  final String? token;
+  final String? image;
+  final String? description;
 
-  User({
+  const User({
     this.id,
     this.name,
     this.email,
@@ -27,21 +25,29 @@ class User {
     this.description,
   });
 
-  factory User.fromMap(Map<String, dynamic> map) {
-    Map<String, dynamic> userData = map['user'] ?? map;
+  factory User.fromMap(Map<String, dynamic> json) {
+    Map<String, dynamic> userData = json['user'] ?? json;
+
+    if (json.containsKey('token')) {
+      userData['token'] = json['token'];
+    }
+
+    if (userData.containsKey('user_type') && userData['role'] == null) {
+      userData['role'] = userData['user_type'];
+    }
 
     return User(
-      id: (userData['id'] as num?)?.toInt(),
-      name: userData['name'] as String?,
-      email: userData['email'] as String?,
-      role: userData['role'] as String? ?? userData['user_type'] as String?,
-      address: userData['address'] as String?,
+      id: userData['id'],
+      name: userData['name'],
+      email: userData['email'],
+      role: userData['role'],
+      address: userData['address'],
       lat: (userData['lat'] as num?)?.toDouble(),
       lng: (userData['lng'] as num?)?.toDouble(),
-      phone: userData['phone'] as String?,
-      token: map['token'] as String?,
-      image: userData['image'] as String?,
-      description: userData['description'] as String?,
+      phone: userData['phone'],
+      token: userData['token'],
+      image: userData['image'],
+      description: userData['description'],
     );
   }
 
@@ -61,12 +67,6 @@ class User {
     };
   }
 
-  String toJson() => json.encode(toMap());
-
-  factory User.fromJson(String source) => User.fromMap(json.decode(source));
-}
-
-extension UserCopyWith on User {
   User copyWith({
     int? id,
     String? name,
